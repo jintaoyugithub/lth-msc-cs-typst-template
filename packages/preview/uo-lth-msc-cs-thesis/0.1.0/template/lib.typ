@@ -1,9 +1,3 @@
-
-// This file contains styling configuration for the LTH Master's thesis template,
-// including LTH brand colors, fonts, and heading styles. Feel free to customize
-// these settings or logic to match your needs.
-
-
 #let LTHblue = rgb(0,0,128)
 #let LTHbronze = rgb(156,97,20)
 #let LTHgreen = rgb(173,202,184)
@@ -11,8 +5,6 @@
 #let LTHcream = rgb(214,219,196)
 #let LTHcyan = rgb(185,211,220)
 #let LTHgrey = rgb(191,184,175)
-
-// Download the fonts from Google Drive and replace the empty `fonts/` folder (see README.md)
 #let fonts = (
     serif: "Adobe Garamond Pro",
     sansserif: "Frutiger LT Pro",
@@ -124,7 +116,9 @@
     //image("assets/template/cover.jpg", width:97%, height:97.5%),
     image("assets/template/cover.jpg", height:97.5%, width:97%),
     //image("assets/template/Untitled.jpg", height:97.5%, width:97%),
-    margin: (inside:3.5cm,outside:2.5cm, top: 3cm, bottom: 3cm)
+    //margin: (inside:3.5cm,outside:2.5cm, top: 3cm, bottom: 3cm)
+    //margin: (inside:4.05cm,outside:4.05cm, top: 4.9cm, bottom: 4.9cm)
+    margin: (inside:2.5cm,outside:2.5cm, top: 3cm, bottom: 3cm)
   )
 
   // Configure equation numbering and spacing.
@@ -278,7 +272,7 @@
 
   // Archive page
 
-  text(24.88pt)[ MASTER'S THESIS \ Computer Science ]
+  text(24.88pt)[ MASTER'S THESIS \ TODO ]
   
   v(150pt)
   text(24.88pt)[ #thesis_number ]
@@ -312,7 +306,7 @@
   place(center+horizon, 
     text(
       // datetime.today().display("[month repr:long] [day], [year]"),
-      datetime(year: 2025, month: 1, day: 24).display("[month repr:long] [day], [year]"),
+      datetime(year: 2025, month: 5, day: 27).display("[month repr:long] [day], [year]"),
       size: 18pt
     ),
     dy: -50pt

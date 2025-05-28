@@ -16,68 +16,53 @@
 
 #show link: underline
 
-First of all, this document is a Typst version of MScTemplateCS by Flavius Gruian and Camilla Lekebjer, which can be found at #link( "https://bitbucket.org/flavius_gruian/msccls/src/master/")[bitbucket/flavius_gruian]. Having found typst.app some time before writing our Master's thesis, we were just not willing to go back to LaTeX due to its slow compile times and non-intuitive styling, justifing the creation of this Typst template. The following text is straight up copied from the original LaTeX template for sake of comparison. If you want to see a practical example we used this template for our master's thesis which can be found at #link("https://lup.lub.lu.se/student-papers/record/9185623")[https://lup.lub.lu.se/student-papers/record/9185623].
+TODO: 250 words
+
 #v(20pt)
 #line(length:100%, stroke: 0.3pt)
 #v(15pt)
-This document describes the Master’s Thesis format for the theses carried out
-at the Department of Computer Science, Lund University.
-Your abstract should capture, in English, the whole thesis with focus on the
-problem and solution in 150 words. It should be placed on a separate right-hand
-page, with an additional 1cm margin on both left and right. Avoid acronyms,
-footnotes, and references in the abstract if possible.
-Leave a 2cm vertical space after the abstract and provide a few keywords rel-
-evant for your report. Use five to six words, of which at most two should be from
-the title.
 ]
 
 #show: template.with(
-  title: [Formatting a Master’s Thesis
-and a bunch of other things that
-are not really needed in here],
-  se_title: [Infoga den Svenska titeln här!],
+  title: [Real-Time Geometry Reconstruction with Compute Shader Tessellation],
+  se_title: [],
   thesis_number: [LU-CS-EX: XXXX-XX],
   issn: [XXXX-XXXX],
 
-
-  subtitle: [(A Typst class)],
+  subtitle: [Master's Thesis],
 
   students: (
     (
-      name: [Theodor Lundqvist], 
-      email: "theodor.lundqvist@gmail.com"
+      name: [Jintao Yu], 
+      email: "jintaoyuemail@gmail.com"
     ),
-    (
-      name: [Ludvig Delvret], 
-      email: "ludvig.delvret@gmail.com"
-    )
   ),
 
   // Change to your supervisor's name
   supervisors: (
     (
-      name: [John Deer], 
-      email: "jdeer@company.se"
+      name: [Kindahl Christian], 
+      email: "ckindahl@ea.com"
     ),
     (
-      name: [Don Jeer], 
-      email: "djeer@xy.lth.se"
+      name: [Michael Doggett], 
+      email: "michael.doggett@cs.lth.se"
     ),
   ),
   
   // Change to your examiner's name
   examiner: (
     (
-      name: [Jane Doe],
-      email: "jane.doe@cs.lth.se"
+      name: [Mattias Wallergård],
+      email: "mattias.wallergard@design.lth.se"
     )
   ),
 
   // Customize with your own school and degree
   affiliation: (
     university: [LTH | Lund University],
-    department: [Department of Computer Science],
-    company: [AFRY AB]
+    department: [Department of Design Science],
+    company: [Electronic Arts]
   ),
 
   lang: "GB",
@@ -85,7 +70,7 @@ are not really needed in here],
   acknowledgements: acknowledgements,
   abstract: abstract,
 
-  keywords: [first keyword, second keyword],
+  keywords: [Computer Graphics, Software Tessellation, TODO],
 
   popular_science_summary: (
     title: [#lorem(6)],
@@ -95,9 +80,50 @@ are not really needed in here],
 
 )
 
-#include "chapters/formatting.typ"
-#include "chapters/language.typ"
-#include "chapters/structure.typ"
+// FYI:
+//
+// [] means need ref here.
+// ![] means need images here.
+// m[] means equation
+//
+// some abbr, 10+ can have a new page
+// - glsl
+// - cuda
+// - lod
+// - ssbo
+// - ubo
+// - gpgpu
+// - cuda
+// - opencl
+// - gpgpu
+// - vr
+// - ar
+// - opengl
+// - directx
+
+#text(weight: 700, size: 20pt)[List of TODO]
+
+#set align(left)
+- references, also in the content
+- abstract
+- acknowledgments
+- introduction ethics ...
+- all images
+
+#include "chapters/introduction.typ"
+#include "chapters/relatework.typ"
+#include "chapters/methodology.typ"
+#include "chapters/implementation.typ"
+#include "chapters/evalAndresults.typ"
+//#include "chapters/discussion.typ"
+#include "chapters/futurework.typ"
+#include "chapters/conclusion.typ"
+
+note: 因为mega是based mesh shader，但是很多平台现在还没有办法支持mesh shader，使用compute shader就成为了解决方案
+
+这篇文章更多是探索如何利用compute shader和displacement mapping
+
+意在提供一个简单的系统架构来看看如果我们要用software tessellation和displacement mapping来实现超高精度的模型会来好处和挑战
 
 
   // Bibliography
