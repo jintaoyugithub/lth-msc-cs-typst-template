@@ -39,134 +39,156 @@ _In this chapter, we present a comprehensive evaluation of our pattern-based com
 
 == Visual Quality Analysis
 
-Visual Quality的评估，主要从geometric fidelity，attribute coherence and shading and visual consisitency展开
+// Visual Quality的评估，主要从geometric fidelity，attribute coherence and shading and visual consisitency展开
+The evaluation of visual quality mainly focuses on geometric fidelity, attribute coherence, shading, and visual consistency
 
 === Visibility and Tessellation
 
-Here in Figure X, we show how the same tessellation pattern can be reused across models with completely different topologies. Despite variations in vertex connectivity and surface curvature, the pattern-based method maintains geometric correctness and visual consistency.
+Here in Figure 29 and 30, we show how the same tessellation pattern with level 10 can be reused across models with completely different topologies. Despite variations in vertex connectivity and surface curvature, the pattern-based method maintains geometric correctness and visual consistency.
 
 #figure(
   kind:image,
-  caption: [haha],
+  caption: [Suzzane coarse mesh(left) and tessellated Suzzane mesh],
   table(
     columns: 2,
     stroke:none,
-    image("figures/hwtessTri.png"),
-    image("figures/hwtessTri.png"),
+    image("figures/monkey_coarse.png", width: 90%),
+    image("figures/monkey_tess.png", width: 91%),
   )
 )
 
-![terrain, monkey, bigguy with same pattern]
+#figure(
+  kind:image,
+  caption: [Big guy coarse mesh(left) and tessellated Big guy mesh],
+  table(
+    columns: 2,
+    stroke:none,
+    image("figures/bigguy_coarse.png", width: 85%),
+    image("figures/bigguy_tess.png", width: 85%),
+  )
+)
+
+//![terrain, monkey, bigguy with same pattern]
+
+But we definitely not satisfied with only 10 tessellation level, the following image demonstrate what is the model looks like with pattern 100 tessellation level.
+
+#figure(
+  image("figures/100tess.png", width: 100%),
+  caption: [
+    Big guy with 100 tessellation level
+  ],
+)
 
 // Figure X compare culling impact of culling on visibility under a fixed camera view, 从第二张图片能看出，即使是简单的culling算法, 也能帮助我们剩下几乎百分之50的计算和内存开销。
-Figure X compares the impact of culling operations on visibility at a fixed camera view. As can be seen in the second image, even a simple culling algorithm can help us save almost 50% of the computation and memory overhead.
+Figure 32 compares the impact of culling operations on visibility at a fixed camera view. As can be seen in the second image, even a simple culling algorithm can help us save almost 50% of the computation and memory overhead.
 
 #figure(
   kind:image,
-  caption: [haha],
+  caption: [Side view of disable culling(left) and enable culling(right)],
   table(
     columns: 2,
     stroke:none,
-    image("figures/hwtessTri.png"),
-    image("figures/hwtessTri.png"),
+    image("figures/sideviewnoclip.png"),
+    image("figures/sideviewclip.png"),
   )
 )
 
-![side camera view with culling, without culing]
+//![side camera view with culling, without culing]
 
 === Displacement mapping
 
 // Tessellation和Displacement mapping一直在程序化地形中扮演者重要的角色，而我们的方法同样也是可以引用在常见的地形生成上的, see Figure X.
-Tessellation and displacement mapping have always played an important role in procedural terrain generation, and our method can also be applied to common terrain generation scenarios, see Figure X
+Tessellation and displacement mapping have always played an important role in procedural terrain generation, and our method can also be applied to common terrain generation scenarios, see Figure 33.
 
 #figure(
   kind:image,
-  caption: [haha],
+  caption: [Terrain with 50 tessellation level(left) and then apply displacement mapping],
   table(
     columns: 2,
     stroke:none,
-    image("figures/hwtessTri.png"),
-    image("figures/hwtessTri.png"),
+    image("figures/quadtess.png"),
+    image("figures/terraintess.png"),
   )
 )
 
-![terrain tessellation view, terrain displacement mapping]
+//![terrain tessellation view, terrain displacement mapping]
 
-To evaluate the generality of our method, we further apply displacement to complex 3D models. Figure Y shows that, even with arbitrary topology, our framework effectively refines the surface, extending beyond traditional terrain applications.
+To evaluate the generality of our method, we further apply displacement to complex 3D models. Figure 34 shows that, even with arbitrary topology, our framework effectively refines the surface, extending beyond traditional terrain applications.
 
 #figure(
   kind:image,
-  caption: [haha],
+  caption: [Big guy with 10 tessellation level(left) and then apply displacement mapping],
   table(
     columns: 2,
     stroke:none,
-    image("figures/hwtessTri.png"),
-    image("figures/hwtessTri.png"),
+    image("figures/bigguytess.png", width: 90%),
+    image("figures/bigguy_dm.png", width: 90%),
   )
 )
 
-![model tessellation view, model displacement mapping]
+//![model tessellation view, model displacement mapping]
 
 === Normal Recalculation
 
 //In figure x, 我们可以看出，displacement过后的lighting计算并不是特别的准确
-In figure x, we can see that the lighting calculation after displacement is not particularly accurate.
+In Figure 35, we can see that the lighting calculation after displacement is not particularly accurate.
 
 #figure(
   kind:image,
-  caption: [haha],
+  caption: [Lighting results with original terrain normal(left) and model normal(right)],
   table(
     columns: 2,
     stroke:none,
-    image("figures/hwtessTri.png"),
-    image("figures/hwtessTri.png"),
+    image("figures/terrain_norelnorm_light.png"),
+    image("figures/model_norecalnorm_light.png", width: 80%),
   )
 )
 
 // 这是因为我们并没有对位移之后的顶点重新计算法线，一般来说deformed过后的mesh，由于表面的曲率发生变化，相应的对应的切线以及法线也会变化，see Figure X. 在terrain上可能不是很明显，Figure x中的结果说明在更复杂的3d模型上则更加容易看出
-This is because we have not recalculated the normals of the displaced vertices. Generally speaking, when a mesh is deformed, the curvature of the surface changes, and so do the corresponding tangents and normals, see Figure X. While this may not be obvious on a terrain, the results in Figure X show that it is easier to see on more complex 3d models. visible on more complex 3d models.
+This is because we have not recalculated the normals of the displaced vertices. Generally speaking, when a mesh is deformed, the curvature of the surface changes, and so do the corresponding tangents and normals, see Figure 37. While this may not be obvious on a terrain, the results in Figure 36 show that it is easier to see on more complex 3D models. visible on more complex 3d models.
 
-![terrain normal recal vs. no normal recal]
+//![terrain normal recal vs. no normal recal]
 
 #figure(
   kind:image,
-  caption: [haha],
+  caption: [Terrain with input normal(left) and re-calculated normal(right) after displacement mapping],
   table(
     columns: 2,
     stroke:none,
-    image("figures/hwtessTri.png"),
-    image("figures/hwtessTri.png"),
+    image("figures/terrain_norecalnorm.png"),
+    image("figures/terrain_recalnorm.png"),
   )
 )
 
-![model normal recal vs. no normal recal]
+//![model normal recal vs. no normal recal]
 
 #figure(
   kind:image,
-  caption: [haha],
+  caption: [Big guy with input normal(left) and re-calculated normal(right) after displacement mapping],
   table(
     columns: 2,
     stroke:none,
-    image("figures/hwtessTri.png"),
-    image("figures/hwtessTri.png"),
+    image("figures/model_nocalnorm.png", width: 85%),
+    image("figures/model_recalnorm.png", width: 85%),
   )
 )
 
 //Figure X中demonstrate 3d模型的lighting在不同法线下的影响
-Figure X demonstrates the impact of different normals on the lighting of the 3D model.
-
-![lighting with normal recal vs. no normal recal]
+Figure 38 demonstrates the impact of different normals on the lighting of the 3D model.
 
 #figure(
   kind:image,
-  caption: [test],
+  caption: [Lighting results with re-calculated normals],
   table(
     columns: 2,
     stroke:none,
-    image("figures/my.png", height: 41%, width: 100%),
-    image("figures/culling.gif")
+    image("figures/terrain_recalnorm_light.png"),
+    image("figures/model_recalnorm_light.png", width: 85%),
   )
-)\
+)
+
+//![lighting with normal recal vs. no normal recal]
+
 
 == Performance Analysis
 
@@ -203,12 +225,12 @@ As we mentioned in the previous chapter, the compute shader pipeline also incurs
 ])
 
 //各个阶段的消耗占比如figure x所示
-The consumption share of each stage is shown in figure x
+The consumption share of each stage is shown in Figure x
 
 #figure(
   image("figures/my.png", width: 30%),
   caption: [
-    pi图
+    PI
   ],
 )
 
@@ -220,7 +242,7 @@ While documenting the performance overhead of our own framework is necessary, in
 #figure(
   image("figures/my.png", width: 50%),
   caption: [
-    test
+    Missing
   ],
 )
 
@@ -229,7 +251,7 @@ While documenting the performance overhead of our own framework is necessary, in
 #figure(
   image("figures/my.png", width: 50%),
   caption: [
-    test
+    Missing
   ],
 )
 
@@ -238,6 +260,6 @@ While documenting the performance overhead of our own framework is necessary, in
 #figure(
   image("figures/my.png", width: 50%),
   caption: [
-    test
+    Missing
   ],
 )

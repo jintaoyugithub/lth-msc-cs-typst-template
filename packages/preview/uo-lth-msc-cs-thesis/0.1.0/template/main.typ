@@ -2,13 +2,6 @@
 
 // Your acknowledgments (Ringraziamenti) go here
 #let acknowledgements = [
-  If you want to thank people, do it here, on a separate right-hand page. Both the U.S. _acknowl_-_edgments_ and the British _acknowledgements_ spellings are acceptable.
-
-  We would like to thank Lennart Andersson for his feedback on this template.
-
-  We would also like thank Camilla Lekebjer for her contribution on this template, as well as Magnus Hultin for his popular science summary class and example document.
-
-  Thanks also go to the following (former) students for helping with feedback and suggestions on this template: Mikael Persson, Christoffer Lundgren, Mahmoud Nasser.
 ]
 
 // Your abstract goes here
@@ -70,14 +63,13 @@ TODO: 250 words
   acknowledgements: acknowledgements,
   abstract: abstract,
 
-  keywords: [Computer Graphics, Software Tessellation, TODO],
+  keywords: [],
 
   popular_science_summary: (
     title: [#lorem(6)],
     abstract: include("popsci/abstract.typ"),
     body: include("popsci/body.typ"),
   )
-
 )
 
 // FYI:
@@ -95,20 +87,25 @@ TODO: 250 words
 // - gpgpu
 // - cuda
 // - opencl
-// - gpgpu
 // - vr
 // - ar
 // - opengl
 // - directx
 
-#text(weight: 700, size: 20pt)[List of TODO]
+#text(weight: 700, size: 20pt)[List of abbreviations]
+#v(50pt)
 
-#set align(left)
-- references, also in the content
-- abstract
-- acknowledgments
-- introduction ethics ...
-- all images
+// #block[
+//   #text(weight: 700)[GLSL]\
+//   #text(weight: 700)[CUDA]\
+//   #text(weight: 700)[LODs]\
+//   #text(weight: 700)[SSBO]\
+//   #text(weight: 700)[UBO]\
+//   #text(weight: 700)[VR]\
+//   #text(weight: 700)[AR]\
+//   #text(weight: 700)[GPGPU]\
+//   #text(weight: 700)[OpenGL]
+// ]
 
 #include "chapters/introduction.typ"
 #include "chapters/relatework.typ"
@@ -118,12 +115,6 @@ TODO: 250 words
 //#include "chapters/discussion.typ"
 #include "chapters/futurework.typ"
 #include "chapters/conclusion.typ"
-
-note: 因为mega是based mesh shader，但是很多平台现在还没有办法支持mesh shader，使用compute shader就成为了解决方案
-
-这篇文章更多是探索如何利用compute shader和displacement mapping
-
-意在提供一个简单的系统架构来看看如果我们要用software tessellation和displacement mapping来实现超高精度的模型会来好处和挑战
 
 
   // Bibliography

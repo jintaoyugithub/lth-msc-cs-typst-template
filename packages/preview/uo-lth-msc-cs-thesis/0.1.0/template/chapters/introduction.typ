@@ -1,17 +1,17 @@
 = Introduction
 
-_double check_:
+_This chapter briefly introduces the background of geometry refinement techniques, discusses the main challenges in the current field, and outlines the objectives of this thesis._
 #v(15pt)
 
 == Background
 
-Reproducing high fidelity geometry in real time play a vital role in computer graphics. In recent years, the demand for real-time photorealistic rendering has driven a surge of interest in high-resolution geometry synthesis, particularly in the context of AAA games, AR/VR, and virtual production pipelines
+Reproducing high fidelity geometry in real time play a vital role in computer graphics. In recent years, the demand for real-time photorealistic rendering has driven a surge of interest in high-resolution geometry synthesis, particularly in the context of entertainment industry, AR/VR and virtual production pipelines.
 
-While providing benefits such as better visual effects, high-fidelity geometry also brings several challenges due to its massive data size. These challenges include reduced editability due to complex mesh topologies that are difficult to animate or manipulate in real-time engines. Increased computational burden for examples more expensive cost of lighting calculations, ray tracing, accurate collision detection, and animation of dense meshes, as well as greater memory requirements for vertices data and textures. Higher bandwidth is required between CPU and GPU and IO overhead among different shader stages and GPU memory.
+While providing benefits such as better visual effects, high-fidelity geometry also brings several challenges due to its massive data size. These challenges include reduced editability due to complex mesh topologies that are difficult to animate or manipulate in real-time engines. Increased computational burden for examples more expensive cost of lighting calculations, ray tracing, accurate collision detection, and animation of dense meshes, as well as greater memory requirements for vertices data and textures. Higher bandwidth is required between CPU and GPU and IO overhead among different shader stages and GPU memory @hoppe2023progressive.
 
-Generating additional triangles in real-time on the gpu, so-call tessellation, is gradually becoming the main solution for rendering a large number of triangles in real-time. In the development of geometry processing technology in these decades, this concept has given rise to a wealth of research results and technical solutions [subdivision algo, hw tessellation ...] , especially hardware tessellation.
+Generating additional triangles in real-time on the gpu, so-call tessellation, is gradually becoming one of the solution for rendering a large number of triangles in real-time. In the development of geometry processing technology in these decades, this concept has given rise to a wealth of research results and technical solutions @catmull1998recursively @loop1987smooth @boubekeur2005generic @lenz2009optimized @boubekeur2008phong @vlachos2001curved, especially Hardware Tessellation @microsoftd3d11features.
 
-However, in terms of flexibility and utilization of gpu resources, hardware tessellation in the traditional gpu rendering pipeline is no longer suitable for the iteration and development of modern gpu architectures. With the introduction of the compute shader[ref] and the concept of gpu driven, it has become possible to use gpu resources flexibly and efficiently. Based on this trend, this paper prototype a customized compute shader to control the segmentation behavior and detail sampling process, with the intention of exploring and implementing a rendering pipeline which utilizes the compute shader tessellation with displacement mapping to restore high-precision models in real time. 
+However, in terms of flexibility and utilization of gpu resources, Hardware Tessellation in the traditional gpu rendering pipeline is no longer suitable for the iteration and development of modern gpu architectures. With the introduction of the compute shader @khronoscomputeshader and the concept of GPU driven pipeline @aaltonen2015siggraph, it has become possible to use gpu resources flexibly and efficiently. Based on this trend, this paper prototype a customized compute shaders pipeline to control the segmentation behavior and detail sampling process, with the intention of exploring and implementing a rendering pipeline which utilizes the compute shader tessellation with displacement mapping to restore high-precision models in real time. 
 
 // Reproducing high fidelity geometry in real time play a vital role in computer graphics, 在最近几年，gpu硬件的快速发展，对更加真实的渲染的追求，便使得实时渲染超高精度的模型变得越发重要，尤其是在3a游戏以及VRAR行业。
 //
@@ -21,13 +21,15 @@ However, in terms of flexibility and utilization of gpu resources, hardware tess
 
 == Aim
 
-This thesis explores the latest real-time surface tessellation techniques, with a specific focus on compute shader implementations. Building upon this foundation, it further develops and prototypes a rendering pipeline aimed at supporting high-fidelity geometries. Additionally, the advantages and disadvantages of compute shader-based subdivision techniques are evaluated, including their impact on rendering performance, frame rates and etc. compare to the traditional hardware tessellation and even more advence technique Nanite[ref].
+This thesis explores the latest real-time surface tessellation techniques, with a specific focus on compute shader implementations. Building upon this foundation, it further develops and prototypes a rendering pipeline aimed at supporting high-fidelity geometries. Additionally, the advantages and disadvantages of compute shader-based subdivision techniques are evaluated, including their impact on rendering performance, frame rates and etc. compare to the traditional hardware tessellation and even more advence technique Nanite @karis2021nanite.
 
 //这个thesis主要是explore 最新的实时曲面细分技术，特别是in context of compute shader，further more, 建立在此基础上，拓展并prototype an pipeline try to reproduce high fidelity geometry and asses what's the pros and cons of using compute shader based tessellation compare to traditional hardware tessellation and even more advence techs nanite，特别是在视觉效果和性能方面，like memory cost and 渲染帧率。
 
 == Research Questions
 
 Based on the objectives and challenges outlined above, this thesis aims to address the following research questions:
+
+#v(15pt)
 
 1. How can compute shaders be effectively utilized to implement an efficient and flexible real-time surface tessellation method?
 
@@ -47,13 +49,13 @@ Based on the objectives and challenges outlined above, this thesis aims to addre
 
 == Contribution
 
-This thesis introduce a rendering pipeline based on compute shader software tessellation 
+TODO
 
 == Sustainable Development Goals
 
 // 可持续发展目标（SDGs）是联合国于2015年提出的17项全球发展目标，旨在到2030年实现消除贫困、保护地球、促进全人类和平与繁荣。这些目标涵盖教育、健康、性别平等、清洁能源、气候行动等多个方面，强调各国和各行业的合作与共同行动。
 
-The Sustainable Development Goals (SDGs) are 17 global development goals put forward by the United Nations in 2015[], aiming to eradicate poverty, protect the planet, and promote peace and prosperity for all humanity by 2030. The goals cover a wide range of areas such as education, health, gender equality, clean energy, climate action, etc., and emphasize cooperation and joint action across countries and sectors.
+The Sustainable Development Goals, short for SDGs, are 17 global development goals put forward by the United Nations in 2015 @hak2016sustainable, aiming to eradicate poverty, protect the planet, and promote peace and prosperity for all humanity by 2030. Our project meet the targets of SDG 4: Quality Education and SDG 9: Industry, Innovation and Infrastructure.
 
 #v(15pt)
 #block[
@@ -62,9 +64,9 @@ The Sustainable Development Goals (SDGs) are 17 global development goals put for
 #v(15pt)
 
 #figure(
-  image("figures/my.png", width: 30%),
+  image("figures/sdg4.svg", width: 30%),
   caption: [
-    pipeline
+    Quality Education
   ],
 )
 
@@ -83,9 +85,9 @@ My project has been able to significantly enhance the immersive experience of ed
 #v(15pt)
 
 #figure(
-  image("figures/my.png", width: 30%),
+  image("figures/sdg9.svg", width: 30%),
   caption: [
-    pipeline
+    Industry, Innovation and Infrastructure
   ],
 )
 
@@ -113,7 +115,7 @@ This project explores flexible and efficient graphical segmentation solutions un
 
 // 高保真渲染技术在**虚拟现实（VR）与增强现实（AR）**中容易造成“真实感错觉”，尤其是在虚拟人、数字孪生等场景中。用户可能会对图像真实性产生误判，甚至在虚拟世界中产生错误的情绪或行为判断，影响心理健康或社会认知。尤需警惕技术被用于误导、欺骗或操控用户行为（例如在营销或虚假信息传播中）。
 
-High-fidelity rendering technology in Virtual Reality and Augmented Reality is prone to cause “Illusion of reality”, especially in scenes such as avatars and digital twins. Users may misjudge the authenticity of the images, or even make wrong emotional or behavioral judgments in the virtual world, affecting mental health or social cognition. There is a particular need to be wary of technologies being used to mislead, deceive or manipulate user behavior (e.g., in marketing or disinformation dissemination).
+High-fidelity rendering technology in Virtual Reality and Augmented Reality is prone to cause “Illusion of reality”, especially in scenes such as avatars and digital twins. Users may misjudge the authenticity of the images, or even make wrong emotional or behavioral judgments in the virtual world, affecting mental health or social cognition. There is a particular need to be wary of technologies being used to mislead, deceive or manipulate user behavior, e.g., in marketing or disinformation dissemination.
 
 
 #v(15pt)

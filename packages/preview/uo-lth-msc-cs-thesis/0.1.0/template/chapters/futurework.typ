@@ -1,7 +1,7 @@
 = Limitation and Future work
 
-_Summary of this chapter_
-#v(20pt)
+_This chapter discuss the challenges and issues we meet throught out the whore precess period. We also outlined several possible solution or related research for the furture work_
+#v(15pt)
 
 == Data Optimization
 
@@ -52,7 +52,7 @@ In Compute Shader, the vertex attributes (position, normal, UV, etc.) generated 
 
 The patterns we have used so far are uniform patterns, i.e., the same tessellation rate is applied to all three sides of the triangle. Although this approach is simple to implement and to some extent can avoid the crack problem caused by T-junction by uniform tessellation rate, it still has many limitations in practical application.
 
-From the perspective of rendering efficiency, different regions often have different geometric complexity or viewpoint importance, see Figure X. Uniform tessellation is similar to the common discrete LOD method in games, which is unable to flexibly adjust the tessellation density of each region according to the difference in geometric complexity or viewpoint, thus introducing a large number of redundant vertices. Compared to adaptive patterns based on curvature or viewing angle, uniform patterns generate too many invalid vertices in flat areas or areas far away from the viewing angle, adding unnecessary rendering and memory overhead, see Figure X.
+From the perspective of rendering efficiency, different regions often have different geometric complexity or viewpoint importance. Uniform tessellation is similar to the common discrete LOD method in games, which is unable to flexibly adjust the tessellation density of each region according to the difference in geometric complexity or viewpoint, thus introducing a large number of redundant vertices. Compared to adaptive patterns based on curvature or viewing angle, uniform patterns generate too many invalid vertices in flat areas or areas far away from the viewing angle, adding unnecessary rendering and memory overhead. //see Figure X.
 
 // Taking “distance to camera” as an example, it is obviously unnecessary to use the same tessellation density in the farther region as in the nearer region, which will result in a large number of vertices being wasted in the region with low visual contribution. Compared to adaptive patterns based on curvature or viewing angle, uniform patterns generate too many invalid vertices in flat areas or areas far away from the viewing angle, adding unnecessary rendering and memory overhead. see figure X.
 //
@@ -61,51 +61,51 @@ From the perspective of rendering efficiency, different regions often have diffe
 
 //从视觉效果上来看，因而在不同 tessellation rate 相邻时，容易出现裂缝（crack）问题。最直接的解决方法是确保共享边上的两个三角形使用相同的细分等级，这可以通过一个简单的 compute shader 实现。如需更细致的控制，也可以采用 [Strugar 2009] 提出的基于 camera 视角的动态调整方法，以进一步减少 T-junction。
 
-可以多写一点
+//可以多写一点
 
 == Generic Vertices Deduplication
 
 // 根据我有限的研究与调查，我发现不管是在最新的mega geometry中，还是稍微早一些的gpu tessellation[]，甚至是hardware tessellation，他们都不可避免的会在shared edge上生成重复的顶点，因为不论是稍微前沿一些的技术还是hardware tessellation他们都是以single triangle or quad作为tessellation的对象，并没有考虑整体的拓扑信息. 这就造成了原本连续的三角形突然间就变成了两个separated的三角形，with overlapping vertices on their shared edges, see Figure X. 
 
-Based on my limited research and investigation, I found that no matter in the latest mega geometry, or slightly earlier gpu tessellation[], or even hardware tessellation, they will inevitably generate duplicate vertices on the shared edge, because they are single triangle or quad as the object of tessellation, and do not consider the overall topological information. This results in a adjacent triangle suddenly becoming two separated triangles, with overlapping vertices on their shared edges, see Figure X. 
+Based on my limited research and investigation, I found that no matter in the latest mega geometry, or slightly earlier gpu tessellation[], or even hardware tessellation, they will inevitably generate duplicate vertices on the shared edge, because they are single triangle or quad as the object of tessellation, and do not consider the overall topological information. This results in a adjacent triangle suddenly becoming two separated triangles, with overlapping vertices on their shared edges, see Figure 43. 
 
 
 #figure(
-  image("figures/my.png", width: 30%),
+  image("figures/ad2sep.svg", width: 90%),
   caption: [
-    test
+    Adjacent triangles(left), Separated triangles(right)
   ],
 )
 
-![overlap vertices adjacent -> separated]
+//![overlap vertices adjacent -> separated]
 
 // 而这也是导致我在重新计算normal的时候，会造成原本我们希望相邻三角形的face normal会作用在同一个顶点上，但是由于重复顶点的原因，现在face normal只会作用在当前构成该三角形的三个顶点上，see Figure X，使得最终的三角形内部的法线插值不够平滑，更坏的是，如果模型的curvature过大，那么两个相邻的三角形则会产生相聚较大的法线朝向，此时这两个三角形的shared edge就会开始争夺这条边的渲染权利，因为他们看似是一条边，但其实是不同的但是overlapped的顶点组成的,see Figure X
 
-That's why when I recalculate the normal, it will cause the face normals of adjacent triangles contribute to the same shared vertex to ensure smooth normal interpolation now only affects the three vertices explicitly forming the current triangle due to the presence of duplicated vertices, each face normal, see Figure X, which will make resulting normals look flat, see Figure X.
+That's why when I recalculate the normal, it will cause the face normals of adjacent triangles contribute to the same shared vertex to ensure smooth normal interpolation now only affects the three vertices explicitly forming the current triangle due to the presence of duplicated vertices, each face normal, see Figure 44, which will make resulting normals look flat, see Figure X.
 
 
 #figure(
-  image("figures/my.png", width: 30%),
+  image("figures/leftaccu.svg", width: 90%),
   caption: [
-    test
+    Triangles involved normal accumulation before tessellation(left) and after tessellation(right)
   ],
 )
 
-![overlapped normal accum]
+//![overlapped normal accum]
 
 //![flat vs smooth]
 
-If the curvature of the model is too large, then two neighboring triangles will have a large converging normal direction, and the shared edges of the two triangles will start to fight for the right to render this edge, because they appear to be one edge, but they are actually composed of different but overlapped vertices, see Figure X.
+If the curvature of the model is too large, then two neighboring triangles will have a large converging normal direction, and the shared edges of the two triangles will start to fight for the right to render this edge, because they appear to be one edge, but they are actually composed of different but overlapped vertices, see Figure 45.
 
 
 #figure(
-  image("figures/my.png", width: 30%),
+  image("figures/fightnorm.svg", width: 90%),
   caption: [
-    test
+    Fighting normal
   ],
 )
 
-![fighting normal]
+//![fighting normal]
 
 // 但是造成这样的视觉flaw并不是最坏的结果，因生成多余顶点而消耗掉的gpu内存才是我们更要优化的地方。为了减少细分时所长生的冗余的顶点，现在的学术界并没有一个非常generic的解法，并且由于deduplication其实has a highly sequential nature，它其实更适合在cpu下执行，要在compute shader中并行的去除多余顶点是一件相对困难的事情. []提出了一个使用cuda的高并行的remove duplicate vertices的算法，但是毕竟cuda是另外一门语言，强行使其操作compute shader生成的数据需要引入许多额外的操作例如内存映射. 并且能直接生成compressed的数据，i.e.没有重复顶点的数据, 是最好的，for example，在一帧中的某个地方生成了500mb的数据，然后在这一帧中之后的某个地方将其压缩到200mb，尽管减少了内存使用，但是这样的行为有可能导致undefined behavior
 //
@@ -125,11 +125,11 @@ The duplicate vertices removal strategy will be differ from different tessellati
 #figure(
   image("figures/my.png", width: 30%),
   caption: [
-    test
+    Missing
   ],
 )
 
-![duplicate vertex的占比问题]
+//![duplicate vertex的占比问题]
 
 // 注意：以下是这是如果完成了deduplication才用得上的内容
 
@@ -168,16 +168,15 @@ Since the Compute Shader cannot directly pass the generated vertex data into the
 
 // Therefore, Mesh Shader introduced by Nvidia[] allow us to avoid unnecessary overhead while maintaining the flexibility and high parallel computational capability. As shown in the Figure X, mesh shader和hardware tessellation一样，可以直接将输出的数据可以直接参与后续的渲染工作，并且由于task shader的存在，可以动态的dispatch mesh shader的数量，从而充分利用gpu高并行计算的能力
 
-Therefore, Mesh Shader introduced by Nvidia[] allow us to avoid unnecessary overhead while maintaining the flexibility and high parallel computational capability. As shown in the Figure X, mesh shader, similar to hardware tessellation, can directly pass the output data to the subsequent rendering work, and due to the existence of task shader, it can dynamically dispatch the number of mesh shaders, thus fully utilizing the gpu's highly parallel computing capability. dispatch the number of mesh shaders, thus fully utilizing the gpu's highly parallel computing capability.
-
+Therefore, Mesh Shader introduced by Nvidia[] allow us to avoid unnecessary overhead while maintaining the flexibility and high parallel computational capability. As shown in the Figure 47, mesh shader, similar to hardware tessellation, can directly pass the output data to the subsequent rendering work, and due to the existence of task shader, it can dynamically dispatch the number of mesh shaders, thus fully utilizing the gpu's highly parallel computing capability. dispatch the number of mesh shaders, thus fully utilizing the gpu's highly parallel computing capability.
 
 #figure(
-  image("figures/my.png", width: 30%),
+  image("figures/meshpipe.jpg", width: 100%),
   caption: [
-    test
+    Traditional graphics pipeline vs. Mesh shader pipeline
   ],
 )
-![mesh shader pipeline]
+//![mesh shader pipeline]
 
 // 此外，Mesh Shader Pipeline 还能有效解决传统渲染管线中存在的一些性能瓶颈。例如，在传统管线中，同一个vertex有可能被多个vertex shader执行，导致完全没必要的计算浪费,see Figure X。同时，由于图形流水线各阶段固定，缺乏足够的灵活性，也难以充分发挥现代 GPU 在大规模并行计算方面的优势。相比之下，Mesh Shader 允许以工作组（Workgroup）为单位，自主生成整个图元结构，并将结果直接写入 GPU 的本地 Cache，从而省去了中间回写显存的开销。
 
@@ -197,27 +196,33 @@ However, the output of mesh shaders are limited by hardware constraints—typica
 
 == Visual effect
 
-还有提一下即便使用了4k的displacement texture，在Tessellation rate非常高的时候同样会出现由于精度不足出现的artifacts，see figure x
+// 还有提一下即便使用了4k的displacement texture，在Tessellation rate非常高的时候同样会出现由于精度不足出现的artifacts，see Figure 48
+Even when using a 4K displacement texture, at very high tessellation rates each triangle can become smaller than a single pixel. In such cases, the limited bit depth used to store scalar values may not provide enough precision, leading to artifacts as shown in Figure 48.
 
 #figure(
-  image("figures/my.png", width: 50%),
+  image("figures/dmartifacts.png", width: 60%),
   caption: [
-    test
+    Displacement artifacts when tessellation is too high
   ],
 )
-![displacement artifacts]
+//![displacement artifacts]
 
 // 由之前的结果可以看出, 由于我们只是增加了三角形的密度，并没有做像subdivision surface那样的平滑处理，所以从视觉效果上看，即使通过rasterizer为三角形内部的顶点信息做了插值平滑处理，但是模型的外轮廓还是显得很棱角分明的, see figure X
 
-As you can see from the previous results, since we only increased the density of the triangles and did not do any smoothing like the subdivision surface, visually, even though we interpolated and smoothed the vertex normal inside the triangles with the rasterizer, the silhouette of the model still looks sharp and angular, see figure X
+As you can see from the previous results, since we only increased the density of the triangles and did not do any smoothing like the subdivision surface, visually, even though we interpolated and smoothed the vertex normal inside the triangles with the rasterizer, the silhouette of the model still looks sharp and angular, see Figure 49.
 
 #figure(
-  image("figures/my.png", width: 40%),
-  caption: [
-    test
-  ],
+  kind:image,
+  caption: [Side view from the same model of tessellation(left) and subdivision(right)],
+  table(
+    columns: 2,
+    stroke:none,
+    image("figures/tessside.png"),
+    image("figures/subdside.png", height: 27%),
+  )
 )
-![subdivision vs tessellation in blender]
+
+//![subdivision vs tessellation in blender]
 
 // 常见的提升手段大概分为两种，一种是直接渲染subdivision surface，一种是在flat triangle的基础上构建高阶平滑曲面。
 Common approaches to improve this are generally divided into two categories: one is directly rendering subdivision surfaces, and the other is constructing higher-order smooth surfaces based on flat triangles.

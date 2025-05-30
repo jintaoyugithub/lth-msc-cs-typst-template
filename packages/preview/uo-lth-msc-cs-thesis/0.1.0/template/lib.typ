@@ -272,7 +272,7 @@
 
   // Archive page
 
-  text(24.88pt)[ MASTER'S THESIS \ TODO ]
+  text(24.88pt)[ MASTER'S THESIS ] //\ TODO ]
   
   v(150pt)
   text(24.88pt)[ #thesis_number ]

@@ -3,8 +3,8 @@
 
 = Implementation
 
-_Summary of this chapter_
-#v(20pt)
+_In this chapter we present the implementation details of the compute shader based tessellation prototype_
+#v(15pt)
 
 == Pipeline Overview
 
@@ -14,96 +14,106 @@ Building upon the insight from the previous studies, we provide a compute shader
 
 === Resources Overview
 
-(AI)This section summarizes the GPU resources used throughout the pipeline. Each resource plays a specific role in different stages of the rendering process, ranging from visibility determination to normal recalculation. Table X provides a detailed breakdown of these resources, including their types, usage stages, and descriptions.
+This section summarizes the GPU resources used throughout the pipeline. Each resource plays a specific role in different stages of the rendering process, ranging from visibility determination to normal recalculation. Table 1 provides a detailed breakdown of these resources, including their types, usage stages, and descriptions.
+
+// #let a = table.cell(
+//   fill.gray.lighten(60%),
+// )[Name]
+
+#let a = table.cell(
+  fill: gray.lighten(20%),
+)[Name]
+
+#let b = table.cell(
+  fill: gray.lighten(20%),
+)[Type]
+
+#let c = table.cell(
+  fill: gray.lighten(20%),
+)[Stages]
+
+#let d = table.cell(
+  fill: gray.lighten(20%),
+)[Description]
 
 #show table.cell.where(y: 0): strong
-#set table(
-  stroke: (x, y) => if y == 0 {
-    (bottom: 0.7pt + black)
-  },
-  align: (left)
+
+#figure(
+  table(
+    columns: 4,
+    align: left,
+    rows: 1cm,
+    a, b, c, d,
+    [Input Mesh data], [SSBO], [All Compute Stages], [Mesh data of the coarse mesh],
+    [Pattern Table], [SSBO], [All Compute Stages], [Different levels of refine pattern],
+    [LookUp Table], [SSBO], [All Compute Stages], [Entry point to Pattern Table],
+    [Triangle Visibility], [SSBO], [All Compute Stages], [ID of the visible triangles],
+    [Data Counters], [UBO], [All Compute Stages], [All atomic counters],
+    [Vertex Tessellation Rate], [SSBO], [All Compute Stages], [Tess factor of each vertex],
+    [Indirect Commands], [SSBO], [Indirect Setup], [Setup indirect commands],
+    [Scene Information], [SSBO], [All Compute Stages], [Scene Configuration],
+    [Frame Constants], [UBO], [Vertex Shader\ Fragment Shader], [Constants for each frame],
+    [Refined Vertices], [SSBO\ Vertex Buffer], [Tessellation Stage\ Vertex Shader], [Generated vertices],
+    [Refined Indices], [SSBO\ Index Buffer], [Vertex Shader], [Generated triangles],
+    [Normal], [SSBO], [Fragment Shader], [Normal of deformed mesh],
+  ),
+  caption: [Resources Reivew],
 )
 
-#align(center, block[
-  #move(dx: -35pt)[
-    #scale(85%)[
-      #table(
-        columns: (4cm, 4cm, 3cm, 8cm),
-        rows: (0.8cm),
-        align: (left),
-        table.header(
-          [Name],
-          [Type],
-          [Stages],
-          [Description],
-        ),
-        [Triangle Visibility], [SSBO], [All Stages], [ID of the visible triangle],
-        [Refined Vertices], [SSBO, Vertex Buffer], [Vertex Shader], [ID of the visible triangle],
-        [Normal], [SSBO], [Fragment Shader], [Re-calculated normals after displacement mapping],
-        [TODO], [], [], [],
-      )
-    ]
-  ]
-])
+In Table 2, we present the mesh data we used in this project.
 
-其实就写在pipeline中的就好了，太细节的也没必要
+#let e = table.cell(
+  fill: gray.lighten(20%),
+)[Triangle Counts]
+
+#let f = table.cell(
+  fill: gray.lighten(20%),
+)[Vertices Counts]
+
+#let g = table.cell(
+  fill: gray.lighten(20%),
+)[Edges Counts]
+
+#let h = table.cell(
+  fill: gray.lighten(20%),
+)[Disk Size]
+
+#figure(
+  table(
+    columns: 5,
+    align: left,
+    rows: 0.8cm,
+    a, e, f, g, h,
+    [Big guy coarse mesh], [2900], [1452], [2900], [145 KB],
+    [Big guy detail mesh], [2,969,600], [1,484,802], [2,969,600], [241 MB],
+    [Big guy displacement texture], table.cell(colspan: 3, align: center)[N/A], [],
+  ),
+  caption: [Input Mesh Data Reivew],
+)
+
 
 === Data-preprossing
 
-In the offline phase, two key components are generated: the tessellation patterns set and a lookup table that indexes them in the GPU memory. Each pattern consists of a set of vertices and triangle indices, which are stored in two large, contiguous memory blocks. The size of each block is determined by the total number of vertices and indices across all supported tessellation levels (from level 0 to the maximum), as shown in Figure X(a). For example, the first three vertices in the memory block belong to the first pattern, the next six to the second pattern, and so on. The same layout applies to the index buffer.
+In the offline phase, two key components are generated: the tessellation patterns set and a lookup table that indexes them in the GPU memory. Each pattern consists of a set of vertices and triangle indices, which are stored in two large, contiguous memory blocks. The size of each block is determined by the total number of vertices and indices across all supported tessellation levels (from level 0 to the maximum), as shown in left side of Figure 17. For example, the first three vertices in the memory block belong to the first pattern, the next six to the second pattern, and so on. The same layout applies to the index buffer.
 
 
 #figure(
-  image("figures/my.png", width: 60%),
+  image("figures/offline.png", width: 100%),
   caption: [
-    test
+    Offline processes
   ],
 )
 
 The lookup table stores the entry points for each pattern, making it efficient to access the appropriate pattern directly in GPU memory during execution. Additional information such as the indices of edge vertices on the coarse triangle is also stored to facilitate vertex reuse when applying patterns.
 
-table of the look up table in order to 更直观的信息，有必要吗？
-
-#show table.cell.where(y: 0): strong
-#set table(
-  stroke: (x, y) => if y == 0 {
-    (bottom: 0.7pt + black)
-  },
-  align: (left)
-)
-
-#align(center, block[
-  #move(dx: -35pt)[
-    #scale(85%)[
-      #table(
-        columns: (4cm, 4cm, 3cm, 8cm),
-        rows: (0.8cm),
-        align: (left),
-        table.header(
-          [Configuration ID],
-          [haha],
-          [Stages],
-          [Description],
-        ),
-        [Triangle Visibility], [SSBO], [All Stages], [ID of the visible triangle],
-        [Refined Vertices], [SSBO, Vertex Buffer], [Vertex Shader], [ID of the visible triangle],
-        [Normal], [SSBO], [Fragment Shader], [Re-calculated normals after displacement mapping],
-        [TODO], [], [], [],
-      )
-    ]
-  ]
-])
-
 === Real time framework
 
-写一下我们所使用到的模型数据，列个表
-
-During the runtime phase, the system runs a sequence of compute-shader-based stages: resource cleanup, triangle visibility determination, tessellation level computation, pattern-based tessellation, and normal recalculation (see Figure X). Since compute shaders operate within an isolated pipeline and cannot directly render to the screen, we must transfer the generated vertex and index data to the traditional rendering pipeline using shader storage buffer objects (SSBOs), which are then bound to the vertex and fragment shaders.
+During the runtime phase, the system runs a sequence of compute-shader-based stages: resource cleanup, triangle visibility determination, tessellation level computation, pattern-based tessellation, and normal recalculation (see Figure 18). Since compute shaders operate within an isolated pipeline and cannot directly render to the screen, we must transfer the generated vertex and index data to the traditional rendering pipeline using shader storage buffer objects (SSBOs), which are then bound to the vertex and fragment shaders.
 
 #figure(
-  image("figures/my.png", width: 50%),
+  image("figures/realtimefw.png", width: 100%),
   caption: [
-    test
+    Realtime compute shader based framework
   ],
 )
 
@@ -121,9 +131,9 @@ If there are displacement textures available, vertex positions are adjusted duri
 //
 // During the run time, there are five main stages, including resources clean up, triangles visibility determination, tessellation rate computation, xxx, normal recalculation, see Figure X. Each stage is construct by a compute shader
 
-![Pipeline Overview]
-![pattern generation memory view]
-![look up table memory view]
+// ![Pipeline Overview]
+// ![pattern generation memory view]
+// ![look up table memory view]
 
 == Patterns Generation
 
@@ -135,27 +145,25 @@ If there are displacement textures available, vertex positions are adjusted duri
 
 In order to achieve flexible and efficient GPU-based tessellation, this section presents algorithms for generating reusable uniform triangle patterns. With the help of these patterns, smaller, finer triangles can be quickly generated on the GPU side by simple and efficient interpolation of the barycentric coordinates.
 
-It's crucial to note that the ordering of the vertices and triangles matters as it affects the efficiency of the subsequent vertex reuse algorithms. Therefore, the vertices and triangles in each mode are arranged in left-to-right and bottom-to-top order, as detailed in Figure X.
+It's crucial to note that the ordering of the vertices and triangles matters as it affects the efficiency of the subsequent vertex reuse algorithms. Therefore, the vertices and triangles in each mode are arranged in left-to-right and bottom-to-top order, as detailed in Figure 19.
 
 #figure(
-  image("figures/my.png", width: 30%),
+  image("figures/triangle.svg", width: 70%),
   caption: [
-    test
+    Vertices order(left), Triangle order(right)
   ],
 )
 
-![vertices and triangle order]
+//![vertices and triangle order]
 
-For each vertex, we store its corresponding barycentric coordinates, see Figure X(b). We can divide the example pattern show in the Figure X(c) into (tessrate - 1)? levels, and each level can be regarded as a linear interpolation along u, with v increasing by 1 divied by depth in each iteration, see Figure X. Due to the properties of barycentric coordinates and to reduce memory usage, we only store the u and v components of the barycentric coordinates for each vertex, since w can be calculated using the following formula:
+For each vertex, we store its corresponding barycentric coordinates. We can divide the example pattern show in the Figure 20 into tessellation levels which 3 in the example, and each level can be regarded as a linear interpolation along u, with v increasing by 1 divied by depth, i.e. tessellation rate in each iteration. Due to the properties of barycentric coordinates and to reduce memory usage, we only store the u and v components of the barycentric coordinates for each vertex, since w can be calculated with $w = 1.0 - u - v$.
 
-$ w = 1.0 - u - v $
-
-![inter level 1; inter level 2, transparent]
+//![inter level 1; inter level 2, transparent]
 
 #figure(
-  image("figures/my.png", width: 30%),
+  image("figures/triangledepth.svg", width: 100%),
   caption: [
-    test
+    Vertices interpolation with gradually increase depth value
   ],
 )
 
@@ -170,35 +178,54 @@ $ w = 1.0 - u - v $
   import algorithmic: *
   Function(
     "PatternVertices",
-    ("std::vec"),
+    ("max_tess_rate", "pattern_vertices"),
     {
+      Assign[idx][0]
+      Assign[cur_tess_rate][$1$]
+      For($"cur_tess_rate" <= "max_tess_rate"$, {
+        Assign[$i$][$0$]
+        Assign[$j$][cur_tess_rate]
+        For($i <= "cur_tess_rate"$, {
+          For($j >= "cur_tess_rate"-i$, {
+            Assign[fracs][$i/"cur_tess_rate", j/"cur_tess_rate"$]
+            let Lerp = Fn.with("Lerp")
+            Assign[bary_coord][Lerp[fracs]]
+            Assign[pattern_vertices[idx]][bary_coord]
+            Assign[idx][idx+1]
+            Assign[j][j-1]
+          })
+          Assign[i][i+1]
+        })
+        Assign[cur_tess_rate][cur_tess_rate + 1]
+      })
     },
   )
 })
+
 
 // 每个pattern的深度值可以通过tess rate - 1轻松算出. 为了高效地构建可重用的 Uniform Pattern，我们在 CPU 端预计算每个 pattern 中的三角形拓扑关系（即索引顺序). 我们将当前的三角形沿着它的右边补充一个三角形，让其成为一个四边形，这是为了让两个简单循环就可以算出我们所要的order, see figure X. 
 //
 // 我们以 pattern 的深度为循环变量，从最底层开始，依次利用当前层以及下一层的顶点信息构造在其之间的三角形。为了避免对于的内存遍历和索引越界，我们并不需要多出来的在虚拟三角形上的顶点信息，所以我们可以通过等差数列前项和以及depth来计算出针对每一层的最大索引值，当有顶点超过对应层数的最大索引值时候，则放弃生成当前三角形的index，see figure x and equation 等差数列前祥和.
 
-The depth value of each pattern can be easily calculated by (tess rate - 1). To efficiently build reusable Uniform Patterns, we precompute the triangle topology, i.e. index order of each pattern. We make the current triangle a quadrilateral by adding a virtual triangle along its right side, so that two simple loops can compute the order we want, see figure X. We use the depth of the pattern as the loop variable. 
+To efficiently build reusable Uniform Patterns, we precompute the triangle topology, i.e. index order of each pattern. We make the current triangle a quadrilateral by adding a virtual triangle along its right side, so that two simple loops can compute the order we want, see Figure 21. We use the depth of the pattern as the loop variable. 
 
-![triangle order, separate the inner triangles like /\\/] 
+//![triangle order, separate the inner triangles like /\\/] 
 
 #figure(
-  image("figures/my.png", width: 30%),
+  image("figures/2triangle.svg", width: 50%),
   caption: [
-    test
+    A example pattern for computing triangle indices
   ],
 )
 
-We use the depth of the pattern as the basic for the loop, starting at the bottom, and constructing the triangles in between, using ID information about the vertices of the current layer and the next layer in turn. To avoid unnecessary memory traversal and index out of bounds, we don't need the extra vertex information on the virtual triangles, so we need to calculate the maximum index value for each layer by using the partial sum of an arithmetic sequence and the depth value, and give up on generating the index of the current triangle when there are vertices exceeding the maximum index value for the corresponding layer, see figure x and equation partial sum of an arithmetic sequence.
+We use the depth of the pattern as the basic for the loop, starting at the bottom, and constructing the triangles in between, using ID information about the vertices of the current layer and the next layer in turn. To avoid unnecessary memory traversal and index out of bounds, we don't need the extra vertex information on the virtual triangles, so we need to calculate the maximum index value for each layer by using the partial sum of an arithmetic sequence and the depth value, and give up on generating the index of the current triangle when there are vertices exceeding the maximum index value computed by formula (2) for the corresponding layer.
 
 $ S_n = (n * (a_n - a_1)) / 2 $
 
 #v(10pt)
 #line(length: 100%)
 #v(-1pt)
-#text(size: 12pt, weight: 700)[Algorithm 1]  #text(size: 12pt, weight: 600)[Pattern Vertices Generation]
+#text(size: 12pt, weight: 700)[Algorithm 1]  #text(size: 12pt, weight: 600)[Pattern Indices Generation]
 #v(-1pt)
 #line(length: 100%)
 #v(-5pt)
@@ -206,11 +233,54 @@ $ S_n = (n * (a_n - a_1)) / 2 $
   import algorithmic: *
   Function(
     "PatternVertices",
-    ("std::vec"),
+    ("max_tess_rate", "pattern_indices"),
     {
+      Assign[idx][0]
+      Assign[prev_row_len][0]
+      Assign[cur_tess_rate][1]
+      For($"cur_tess_rate" <= "max_tess_rate"$, {
+        Assign[depth][cur_tess_rate]
+        Assign[$j$][0]
+        For($j <= "depth"$, {
+          Assign[max_idx][$((j+2) * (("cur_tess_rate" + 1) * ("cur_tess_rate" - j))) / 2 - 1$]
+          Assign[num_row_quad][cur_tess_rate - j]
+          Assign[cur_row_len][cur_tess_rate + 1 - j]
+
+          Assign[i][0]
+          For($i < "num_row_quad"$, {
+            Assign[start_point][$i + (j * ("cur_tess_rate" + 1) + ("cur_tess_rate" - j )) / 2$]
+            Assign[fir_point][start_point]
+            Assign[sed_point][start_point + 1]
+            Assign[thi_point][start_point + cur_row_len]
+
+            Assign[pattern_indices[idx]][vec3(fir_point, sed_point, thi_point)]
+            Assign[idx][idx+ 1]
+
+            Assign[fir_point][start_point + 1]
+            If($"fir_point" + "cur_row_len" > "max_idx"$, {
+              Assign[sed_point][0]
+              Else({
+                Assign[sed_point][fir_point + cur_row_len]
+              })
+            })
+            If($"sed_point" == 0$, {
+              [continue]
+            })
+            Assign[thi_point][start_point + cur_row_len]
+            Assign[pattern_indices[idx]][vec3(fir_point, sed_point, thi_point)]
+
+            Assign[idx][idx+ 1]
+            Assign[i][i+ 1]
+          })
+
+          Assign[j][j + 1]
+        })
+        Assign[cur_tess_rate][cur_tess_rate + 1]
+      })
     },
   )
 })
+
 
 Using the above method, we can efficiently pre-generate triangle uniform patterns at arbitrary resolutions on the CPU side to support high-concurrency tessellation on the GPU. For detailed pseudocode, please refer to Algorithm 1 and Algorithm 2.
 
@@ -242,27 +312,27 @@ In addition to resource initialization, the formal execution of a real-time rend
 
 To this end, we employ a strategy similar to fix culling function in the graphics hardware, i.e. back culling to determine the visibility of triangles. Specifically, we first construct a face normal for each triangle and compute the dot product between it and the camera view direction. If the dot product is greater than zero, the triangle is facing the camera and is visible; conversely, if the dot product is less than or equal to zero, the triangle has its back to the camera and should be culled. This approach is both simple and efficient, and is especially suitable for parallel computing environments.
 
-![背面剔除示意图]
+//![背面剔除示意图]
 
 #figure(
-  image("figures/my.png", width: 30%),
+  image("figures/culling.svg", width: 80%),
   caption: [
-    test
+    Culling
   ],
 )
 
-![模型culling vs. witou culling]
+//![模型culling vs. witou culling]
 
 // 完成可见性筛选后，我们为剩余的顶点分配曲面细分等级。该等级由顶点到摄像机的距离决定，距离越近的顶点会被赋予更高的细分等级，从而在视觉上获得更丰富的几何细节。下图展示了细分等级随距离变化的策略：
 
-After completing the visibility filter, we assign a surface subdivision level to the remaining vertices. The level depends on the distance from the vertex to the camera - vertices that are closer will be assigned a higher subdivision level, resulting in visually richer geometric details. The figure X illustrates the strategy of varying the subdivision level with distance:
+After completing the visibility filter, we assign a surface subdivision level to the remaining vertices. The level depends on the distance from the vertex to the camera - vertices that are closer will be assigned a higher subdivision level, resulting in visually richer geometric details. The Figure 23 illustrates the strategy of varying the tessellation level with distance to the camera.
 
-![基于摄像机距离分配细分等级示意图]
+//![基于摄像机距离分配细分等级示意图]
 
 #figure(
-  image("figures/my.png", width: 50%),
+  image("figures/my.png", width: 40%),
   caption: [
-    test
+    Missing
   ],
 )
 
@@ -274,39 +344,44 @@ However, the focus of this paper is on the design of the rendering pipeline fram
 
 // 有了前面的准备工作，真正执行tessellation的时候并不涉及什么复杂的算，只要根据取到的pattern上面的bary coord以及真实的顶点数据from corase triangle，通过简单的插值公式，see equation 1, 来获得真正的顶点位置数据。不仅仅是顶点位置数据，许多其他attributes同样也可以通过这个方式获得，比如法线，纹理坐标等等, see Figure X.
 
-After the preparatory work, the actual execution of Tessellation itself is not complicated. The core of Tessellation is to use the barycentric coordinates of the pre-generated pattern and the vertex data of the original coarse triangle to calculate the real vertex positions after refinement by a simple interpolation formula (see Equation 1).
+After the preparatory work, the actual execution of Tessellation itself is not complicated. The core of Tessellation is to use the barycentric coordinates of the pre-generated pattern and the vertex data of the original coarse triangle to calculate the real vertex positions after refinement by the interpolation formula (1).
 
-$ i $
-
-This interpolation method is not only suitable for vertex position calculation, but also for obtaining other attributes, such as normals, texture coordinates, etc. See Figure X.
+// This interpolation method is not only suitable for vertex position calculation, but also for obtaining other attributes, such as normals, texture coordinates, etc. See Figure X.
 
 #figure(
-  image("figures/my.png", width: 30%),
+  image("figures/tessellation.svg", width: 100%),
   caption: [
-    test
+    Tessellation process
   ],
 )
 
-![barycentric coord in triangle + actual coarse position = actual position in triangle]
+// ![barycentric coord in triangle + actual coarse position = actual position in triangle]
 
 To further enhance geometric detail, displacement mapping can be applied on top of the interpolated surface. Once the base position is computed through barycentric interpolation, we offset it along the original surface normal using a displacement value sampled from a displacement texture. This value is typically fetched using the corresponding interpolated texture coordinates. 
 
 #figure(
-  image("figures/my.png", width: 30%),
-  caption: [
-    test
-  ],
+  kind:image,
+  caption: [Displacement Mapping],
+  table(
+    columns: 2,
+    stroke:none,
+    image("figures/origin.png", height: 35%),
+    image("figures/displaced.png", height: 35%),
+  )
 )
 
-![部分coarse mesh(with pattern) + displacement texture]
+
+//![部分coarse mesh(with pattern) + displacement texture]
 
 === Vertices Deduplication
 
-因为tessellation是针对每个coarse triangle的，并没有考略整体的拓扑信息，导致在细分的时候，triangles which share the same edges will 在相同的位置生成duplicate vertices, see figure X
+TODO
 
-![shared points view]
-
-![flicking normal in side coarse triangle]
+// 因为tessellation是针对每个coarse triangle的，并没有考略整体的拓扑信息，导致在细分的时候，triangles which share the same edges will 在相同的位置生成duplicate vertices, see figure X
+//
+// ![shared points view]
+//
+// ![flicking normal in side coarse triangle]
 
 == Normal Re-Calculation
 
@@ -323,68 +398,44 @@ In the case of dynamic water or procedurally generated terrain, where vertex pos
 
 However, when dealing with complex 3D models, the situation is different. If we don't rely on a normal map, we need to recalculate the displaced normals in some other way. 
 
-![想一下三角形找垂直方向的点]
+//![想一下三角形找垂直方向的点]
 
 #figure(
-  image("figures/my.png", width: 30%),
+  image("figures/recalnormal.png", width: 100%),
   caption: [
-    test
+    Quad has better topology to calculate derivatives than triangle
   ],
 )
 
-If only face normal is used, each triangle will appear distinctly flat and the overall effect will be stiff. Therefore, it is more desirable to compute normals for each vertex, so that during the rasterization phase, the GPU can interpolate the normals inside the triangles, resulting in a smoother surface effect (see Figure X). Specifically, for each tessellated triangle, we first construct its face normals and accumulate them to each of the three vertices constituting the triangle. Taking the topology in Fig. X as an example, if a vertex X is connected to multiple triangles, then that vertex will receive the face normals from each neighboring triangle. In this way, the final normal of vertex X is jointly determined by the normals of all its neighboring triangles, providing better smoothing.
+If only face normal is used, each triangle will appear distinctly flat and the overall effect will be stiff. Therefore, it is more desirable to compute normals for each vertex, so that during the rasterization phase, the GPU can interpolate the normals inside the triangles, resulting in a smoother surface effect. Specifically, for each tessellated triangle, we first construct its face normals and accumulate them to each of the three vertices constituting the triangle. Taking the topology in Figure 27 as an example, if a vertex X is connected to multiple triangles, then that vertex will receive the face normals from each neighboring triangle. In this way, the final normal of vertex X is jointly determined by the normals of all its neighboring triangles, providing better smoothing.
+
+#figure(
+  image("figures/accuproc.svg", width: 100%),
+  caption: [
+   Affected region of normal recalculation on the central triangle(left) and normal accumulate process(mid and right)
+  ],
+)
 
 Since this process is executed in parallel in the Compute Shader, the final normals of all vertices are not immediately available until the end of the calculation Therefore, these normals need to be normalized to ensure they are in the correct range before they are subsequently used.
 
+// #figure(
+//   image("figures/my.png", width: 30%),
+//   caption: [
+//     test
+//   ],
+// )
+//
+// ![flat normal and smooth normal]
+
+
+//![点和triangles，影响, 比如第一个影响，然后第二个]
 
 #figure(
-  image("figures/my.png", width: 30%),
+  image("figures/accunormal.svg", width: 100%),
   caption: [
-    test
+    accumulated normals(left) and normalized normal(right)
   ],
 )
 
-![flat normal and smooth normal]
-
-#figure(
-  image("figures/my.png", width: 30%),
-  caption: [
-    test
-  ],
-)
-
-![点和triangles，影响, 比如第一个影响，然后第二个]
-
-#figure(
-  image("figures/my.png", width: 30%),
-  caption: [
-    test
-  ],
-)
-
-![normal accumulation]
-
-代码还会仔加1页
-代码还会仔加1页
-代码还会仔加1页
-代码还会仔加1页
-代码还会仔加1页
-代码还会仔加1页
-代码还会仔加1页
-代码还会仔加1页
-代码还会仔加1页
-代码还会仔加1页
-代码还会仔加1页
-代码还会仔加1页
-代码还会仔加1页
-代码还会仔加1页
-代码还会仔加1页
-代码还会仔加1页
-代码还会仔加1页
-代码还会仔加1页
-代码还会仔加1页
-代码还会仔加1页
-代码还会仔加1页
-代码还会仔加1页
-代码还会仔加1页
+//![normal accumulation]
 
