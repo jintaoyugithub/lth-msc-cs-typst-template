@@ -44,7 +44,7 @@ The evaluation of visual quality mainly focuses on geometric fidelity, attribute
 
 === Visibility and Tessellation
 
-Here in Figure 29 and 30, we show how the same tessellation pattern with level 10 can be reused across models with completely different topologies. Despite variations in vertex connectivity and surface curvature, the pattern-based method maintains geometric correctness and visual consistency.
+Here in Figure 28 and 29, we show how the same tessellation pattern with level 10 can be reused across models with completely different topologies. Despite variations in vertex connectivity and surface curvature, the pattern-based method maintains geometric correctness and visual consistency.
 
 #figure(
   kind:image,
@@ -80,7 +80,7 @@ But we definitely not satisfied with only 10 tessellation level, the following i
 )
 
 // Figure X compare culling impact of culling on visibility under a fixed camera view, 从第二张图片能看出，即使是简单的culling算法, 也能帮助我们剩下几乎百分之50的计算和内存开销。
-Figure 32 compares the impact of culling operations on visibility at a fixed camera view. As can be seen in the second image, even a simple culling algorithm can help us save almost 50% of the computation and memory overhead.
+Figure 31 compares the impact of culling operations on visibility at a fixed camera view. As can be seen in the second image, even a simple culling algorithm can help us save almost 50% of the computation and memory overhead.
 
 #figure(
   kind:image,
@@ -98,7 +98,7 @@ Figure 32 compares the impact of culling operations on visibility at a fixed cam
 === Displacement mapping
 
 // Tessellation和Displacement mapping一直在程序化地形中扮演者重要的角色，而我们的方法同样也是可以引用在常见的地形生成上的, see Figure X.
-Tessellation and displacement mapping have always played an important role in procedural terrain generation, and our method can also be applied to common terrain generation scenarios, see Figure 33.
+Tessellation and displacement mapping have always played an important role in procedural terrain generation, and our method can also be applied to common terrain generation scenarios, see Figure 32.
 
 #figure(
   kind:image,
@@ -113,7 +113,7 @@ Tessellation and displacement mapping have always played an important role in pr
 
 //![terrain tessellation view, terrain displacement mapping]
 
-To evaluate the generality of our method, we further apply displacement to complex 3D models. Figure 34 shows that, even with arbitrary topology, our framework effectively refines the surface, extending beyond traditional terrain applications.
+To evaluate the generality of our method, we further apply displacement to complex 3D models. Figure 33 shows that, even with arbitrary topology, our framework effectively refines the surface, extending beyond traditional terrain applications.
 
 #figure(
   kind:image,
@@ -131,7 +131,7 @@ To evaluate the generality of our method, we further apply displacement to compl
 === Normal Recalculation
 
 //In figure x, 我们可以看出，displacement过后的lighting计算并不是特别的准确
-In Figure 35, we can see that the lighting calculation after displacement is not particularly accurate.
+In Figure 34, we can see that the lighting calculation after displacement is not particularly accurate.
 
 #figure(
   kind:image,
@@ -145,7 +145,7 @@ In Figure 35, we can see that the lighting calculation after displacement is not
 )
 
 // 这是因为我们并没有对位移之后的顶点重新计算法线，一般来说deformed过后的mesh，由于表面的曲率发生变化，相应的对应的切线以及法线也会变化，see Figure X. 在terrain上可能不是很明显，Figure x中的结果说明在更复杂的3d模型上则更加容易看出
-This is because we have not recalculated the normals of the displaced vertices. Generally speaking, when a mesh is deformed, the curvature of the surface changes, and so do the corresponding tangents and normals, see Figure 37. While this may not be obvious on a terrain, the results in Figure 36 show that it is easier to see on more complex 3D models. visible on more complex 3d models.
+This is because we have not recalculated the normals of the displaced vertices. Generally speaking, when a mesh is deformed, the curvature of the surface changes, and so do the corresponding tangents and normals, see Figure 35. While this may not be obvious on a terrain, the results in Figure 36 show that it is easier to see on more complex 3D models. visible on more complex 3d models.
 
 //![terrain normal recal vs. no normal recal]
 
@@ -174,7 +174,7 @@ This is because we have not recalculated the normals of the displaced vertices. 
 )
 
 //Figure X中demonstrate 3d模型的lighting在不同法线下的影响
-Figure 38 demonstrates the impact of different normals on the lighting of the 3D model.
+Figure 37 demonstrates the impact of different normals on the lighting of the 3D model.
 
 #figure(
   kind:image,
@@ -196,7 +196,15 @@ Figure 38 demonstrates the impact of different normals on the lighting of the 3D
 
 // 我们在先前的chapter就有提到过，compute shader pipeline也会带来一些额外性能开销。下表详细描述了我们的framework中每个stage产生的开销，由于某些开销会根据模型不同而不同，所以这里统一采用bigguy作为input mesh data, 详细资料见table x， with fix tess pattern 70多, 因为这个pattern产生的三角形数量和hw最高tess level产生的差不多。
 
-As we mentioned in the previous chapter, the compute shader pipeline also incurs some additional performance overheads. The following table describes in detail the overhead incurred by each stage in our framework. Since some of the overheads will be different depending on the model, here we uniformly use Bigguy as input mesh data, see table x for more details, with a fixed tessellation level of *70+*, as this pattern produces about the same number of as that generated by the highest tessellation level of Hardware Tessellation[].
+As we mentioned in the previous chapter, the compute shader pipeline also incurs some additional performance overheads. The following table and figure describes in detail the overhead incurred in our framework. 
+
+// better to use table
+// #figure(
+//   image("figures/tessmem.png", width: 100%),
+//   caption: [
+//     Memory footprint of each buffer
+//   ],
+// )
 
 #show table.cell.where(y: 0): strong
 #set table(
@@ -206,60 +214,210 @@ As we mentioned in the previous chapter, the compute shader pipeline also incurs
   align: (left)
 )
 
-#align(center, block[
-  #move(dx: 0pt)[
-    #scale(85%)[
-      #table(
-        columns: (4cm, 8cm, 4cm),
-        rows: (0.8cm),
-        align: (left),
-        table.header(
-          [Stages],
-          [Memory Footprint],
-          [Execution Time],
-        ),
-        [Triangle Visibility], [SSBO], [All Stages], 
-      )
-    ]
-  ]
-])
-
-//各个阶段的消耗占比如figure x所示
-The consumption share of each stage is shown in Figure x
+#let d = table.cell(
+  fill: gray.lighten(20%),
+)[Description]
 
 #figure(
-  image("figures/my.png", width: 30%),
+  table(
+    columns: 2,
+    rows: (0.8cm),
+    align: (center),
+    table.header(
+      [Buffer Name],
+      [Size in memory],
+    ),
+    [Triangles Visibility], [0.285 MB],
+    [Refine Patterns], [5.47 MB],
+    [Indirect Commands], [160 B],
+    [Refined Vertices], [403 MB],
+    [Refined Indices], [403 MB],
+    [Scene Configuration], [64 B],
+    [Re-calculated Normal], [403 MB],
+    [Frame Constants], [176 B],
+  ),
+  caption: [Resources in GPU Memory],
+)
+
+
+It's worth noting that most of the memory here is pre-allocated in order to meet the needs of dynamically generated vertices. In the following analysis, we focus solely on the actual memory used by the generated geometry, excluding the pre-allocated buffer space reserved for dynamic vertex generation.
+
+Following figure show the GPU time of each stage in millisecond with the tessellation factor of 50.
+
+#figure(
+  image("figures/tesstime.png", width: 85%),
   caption: [
-    PI
+    GPU and CPU execution time of different stages
   ],
 )
+
+// Since some of the overheads will be different depending on the model, here we uniformly use Bigguy as input mesh data, see Table 2 for more details, with a fixed tessellation level of 78 out of 100 maximum, as this pattern produces about the same number of as that generated by the highest tessellation level of Hardware Tessellation.
+
+// #show table.cell.where(y: 0): strong
+// #set table(
+//   stroke: (x, y) => if y == 0 {
+//     (bottom: 0.7pt + black)
+//   },
+//   align: (left)
+// )
+//
+// #figure(
+//   table(
+//     columns: 4,
+//     rows: (1cm),
+//     align: (center),
+//     table.header(
+//       [Stages],
+//       [Memory Footprint],
+//       [GPU Time (ms)],
+//       [CPU Time (ms)],
+//     ),
+//     [Refine Patterns], [], [N/A], [N/A],
+//     [Resources Clean Up], [N/A], [1.103], [0.074],
+//     [Triangle Visibility], [285 KB], [0.010], [0.057],
+//     [Indirect Command Setup], [ 0.16 KB ], [0.023], [0.060],
+//     //[Tessellation level determination], [], [], [],
+//     [Tessellation], [806 MB], [1.610], [0.030],
+//     [Normal Re-calculation], [403 MB], [1.370], [0.018],
+//     [Rendering], [N/A], [5.285], [0.118],
+//   )
+// )
+
+// #align(center, block[
+//   #move(dx: -34pt)[
+//     #scale(80%)[
+//       #table(
+//         columns: (6cm,5cm,4cm,4cm),
+//         rows: (1cm),
+//         align: (left),
+//         table.header(
+//           [Stages],
+//           [Memory Footprint],
+//           [GPU Time (ms)],
+//           [CPU Time (ms)],
+//         ),
+//         [Resources Clean Up], [N/A], [1.103], [0.074],
+//         [Triangle Visibility], [285 KB], [0.010], [0.057],
+//         [Indirect Command Setup], [ 0.16 KB ], [0.023], [0.060],
+//         //[Tessellation level determination], [], [], [],
+//         [Tessellation], [806 MB], [1.610], [0.030],
+//         [Normal Re-calculation], [403 MB], [1.370], [0.018],
+//         [Rendering], [N/A], [5.285], [0.118],
+//       )
+//     ]
+//   ]
+// ])
+
+// The consumption, including rendering time and memory cost, share of each stage is shown in Figure 39 and Figure 40.
+//
+// #figure(
+//   kind:image,
+//   caption: [Lighting results with re-calculated normals],
+//   table(
+//     columns: 2,
+//     stroke:none,
+//     image("figures/terrain_recalnorm_light.png"),
+//     image("figures/model_recalnorm_light.png", width: 85%),
+//   )
+// )
 
 // 虽然记录自身框架的性能开销是必要的，但为了全面评估该方法的实用性，我们还必须将其与现有的几种主流方案进行对比。接下来，我们将依次展示与直接渲染高细节模型、硬件 Tessellation 以及 Nanite 等先进技术的性能对比结果。
 While documenting the performance overhead of our own framework is necessary, in order to fully assess the utility of the approach, we must also compare it to several existing mainstream schemes. In the next section, we will show the performance results in turn against state-of-the-art techniques such as direct rendering of highly detailed models, Hardware Tessellation, and Nanite.
 
-=== Compare to directly
+
+#v(15pt)
+#block[
+  #text(size: 15pt, weight: 700,)[Compare to original detailed mesh]
+]
+#v(15pt)
+
+In Table 2, we present comprehensive information about the input detailed mesh data. This section we present the subsequent analysis focusing on model loading time, rendering time and memory consumption. To get the same triangle amount, input coarse mesh will apply pattern with tessellation level 32 to generate $2900 * 32 * 32 = 2969600$ triangles.
+
+// #figure(
+//   table(
+//     columns: 4,
+//     rows: (1cm),
+//     align: (center),
+//     table.header(
+//       [Approach],
+//       [Asset Loading Time],
+//       [Rendering Time],
+//       [Memory Cost],
+//     ),
+//     [Original Model], [27820 ms], [], [],
+//     [Coarse mesh with tessellation], [86.34 ms], [4.941], [],
+//   )
+// )
+
 
 #figure(
-  image("figures/my.png", width: 50%),
+  image("figures/tessvsori.png", width: 85%),
   caption: [
-    Missing
+    Comparison between coarse mesh with compute shader tessellation and original detailed model
   ],
 )
 
-=== Compare to hardware tessellation
+// 由于无法避免的必须将生成的顶点写会gpu内存，所以其实使用到的内存其实差不多，但是模型的加载时间从原来的27820ms减少到了86ms，渲染效率也相对提高了百分之37%，从7.3ms减少到了4.61ms
+
+Since the generated vertices must inevitably be written back to GPU memory, the actual memory usage remains roughly the same — or even slightly higher due to the additional storage required for the displacement texture. However, the model loading time is significantly reduced from 27,820 ms to 86 ms, and the rendering performance also improves by approximately 37%, with the rendering time decreasing from 7.3 ms to 4.61 ms.
+
+
+#v(15pt)
+#block[
+  #text(size: 15pt, weight: 700,)[Compare to Hardware Tessellation]
+]
+#v(15pt)
+
+Since Hardware Tessellation directly stream generated primitive data to the GPU cache, although it is possible to estimate memory usage depending on the amount of generated vertices and triangles, we only consider the rendering consumption as hardware implementation detail such as data compression is unknown.
+
+//下图对比了生成相同三角形的数量，两个approach的渲染表现
+// The figure below compares the rendering performance of the two approaches with the same tessellation factors. As we can see, 在适中的tessellation factor时候，cs tessellation的process时间是稍微好一点，当tess factor太大或太小，都是hw tess的执行时间稍微短一些
+
 
 #figure(
-  image("figures/my.png", width: 50%),
+  image("figures/tessvshwtess.png", width: 85%),
   caption: [
-    Missing
+    Comparison between compute shader tessellation with hardware tessellation in different tessellation factors
   ],
 )
 
-=== Compare to nanite
+The figure above compares the rendering performance of the two approaches using the same tessellation factors. As we can see, at moderate tessellation levels, the compute shader-based tessellation shows slightly better processing times. When the tessellation factor is either too high or too low, hardware tessellation performs slightly faster.
 
-#figure(
-  image("figures/my.png", width: 50%),
-  caption: [
-    Missing
-  ],
-)
+// #v(15pt)
+// #block[
+//   #text(size: 15pt, weight: 700,)[Compare to Nanite]
+// ]
+// #v(15pt)
+//
+// // 虽然不论在系统复杂度，性能优化以及视觉效果上来说，本项目提出出的prototype都没办法和nanite相提并论，但是跟他比比还是很有借鉴价值的
+//
+// Although the prototype presented in this project cannot match Nanite in terms of system complexity, performance optimization, or visual quality, comparing with it still provides valuable insights.
+//
+// 因为nanite是动态是动态straming不同lod的cluster，
+
+// #figure(
+//   image("figures/my.png", width: 50%),
+//   caption: [
+//     Missing
+//   ],
+// )
+
+
+//=== Summary
+
+//The following charts demonstrate the ...
+
+
+// #figure(
+//   image("figures/my.png", width: 50%),
+//   caption: [
+//     Missing
+//   ],
+// )
+
+// #figure(
+//   image("figures/my.png", width: 50%),
+//   caption: [
+//     Missing
+//   ],
+// )

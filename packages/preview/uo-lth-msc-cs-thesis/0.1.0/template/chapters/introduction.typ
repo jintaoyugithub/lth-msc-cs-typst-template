@@ -49,7 +49,9 @@ Based on the objectives and challenges outlined above, this thesis aims to addre
 
 == Contribution
 
-TODO
+This thesis presents a real-time geometry reconstruction pipeline based on compute shader-driven tessellation, enabling dynamic surface refinement and displacement mapping directly on the GPU. It introduces a reusable, pattern-based tessellation method implemented entirely in compute shaders, capable of generating high-density geometry with arbitrary input topology. 
+
+The proposed pipeline is designed for practical use, with particular attention to memory efficiency and visual fidelity. Finally, the system is evaluated through detailed comparisons with traditional approaches such as hardware tessellation and Nanite, demonstrating its effectiveness in both performance and visual quality.
 
 == Sustainable Development Goals
 

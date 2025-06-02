@@ -11,9 +11,11 @@ _This chapter discuss the challenges and issues we meet throught out the whore p
 //
 // 此外，在基于 Compute Shader 的渲染流程中，由于其与传统图形渲染管线之间缺乏直接的数据通路，所有生成的中间结果必须显式地写入到gpu内存中 因此，为了降低内存占用并提升运行效率，我们必须对一部分中间数据进行压缩处理。特别是在利用 pattern 生成新的图元（Primitive）过程中，包括顶点位置、法线、纹理坐标（UV）等信息在内的数据都应尽可能压缩存储，以减少整体内存 footprint。
 
-GPUs have relatively limited memory resources available compared to host systems. For example, common consumer graphics cards such as the NVIDIA RTX 3060 provide approximately 12GB of video memory, while some AMD cards such as the RX 6700 XT come with 12GB or less. In this memory-constrained environment, any redundant data storage can negatively impact system performance.
+GPUs have relatively limited memory resources available compared to host systems. In this memory-constrained environment, any redundant data storage can negatively impact system performance.
 
-In order to minimize the memory footprint cause by the lack of a direct data path between compute shader pipeline and traditional pipeline and increase the efficiency of the operation, a portion of the intermediate data must be compressed. Especially in the process of generating new primitives using pattern, the data including vertex positions, normals, texture coordinates (UV) and other information should be compressed and stored as much as possible in order to reduce the overall memory footprint.
+//For example, common consumer graphics cards such as the NVIDIA RTX 3060 provide approximately 12GB of video memory, while some AMD cards such as the RX 6700 XT come with 12GB or less. 
+
+// In order to minimize the memory footprint cause by the lack of a direct data path between compute shader pipeline and traditional pipeline and increase the efficiency of the operation, a portion of the intermediate data must be compressed. Especially in the process of generating new primitives using pattern, the data including vertex positions, normals, texture coordinates (UV) and other information should be compressed and stored as much as possible in order to reduce the overall memory footprint.
 
 // 虽然前面提到我们只存储uv，但是每个u and v还是分别用4 byte的float类型存储，i.e. 对于每个顶点都会占用到8bytes, 而如果我们使用32 bits，即4 byte，16 bit 存储u， 16 bit 存储v，这样就能省下来百分之50的内存开销, same for the triangle index, 但对于位数的选择则depending on最大的pattern长生的三角形数量，数量少的话每个index分配8bit就可以，多的话可以考虑16bit（我该在哪里插入这个想法是来自mega geometry) 同理对于在compute shader中使用pattern生成的数据，如顶点，法线等，一样同样可以用类似的方式对其进行高效的压缩，毕竟shader是很擅长进行大规模的简单计算的。
 //
@@ -23,11 +25,13 @@ In order to minimize the memory footprint cause by the lack of a direct data pat
 //
 // 此外，在 Compute Shader 中利用 pattern 动态生成的顶点数据（如位置、法线、UV 等）也可以采用类似压缩方式进行高效存储与重构。由于 Shader 擅长大规模并行的简单计算，这类压缩与解压过程对性能的影响极小，却能显著降低显存占用，尤其适用于受限资源场景中的实时渲染任务。并且得益于 pattern 的高度对称性，我们甚至无需完整存储所有顶点数据，仅需保留一半顶点的属性信息，另一半则可以通过对称映射或简单计算直接还原，从而进一步压缩数据体积，减少存储压力。
 
-Although it was mentioned earlier that we only store u and v in the barycentric coordinates of each vertex, they are currently each still stored as 32-bit floats, which means that they take up 8 bytes per vertex. To further consolidate their memory footprint, we can encode v as 16-bit integers respectively, combining them into a single 32-bit, i.e. 4 bytes data structure, thus halving the memory overhead per vertex. 
+Although it was mentioned earlier that we only store u and v in the barycentric coordinates of each vertex, they are currently each still stored as 32-bit floats, which means that they take up 8 bytes per vertex. To further consolidate their memory footprint, we can encode v as 16-bit integers respectively, combining them into a single 32-bit, i.e. 4 bytes data structure, thus halving the memory overhead per vertex. Similarly, different bit-widths can be used for the storage of triangle indices @RTXMG.
 
-Similarly, different bit-widths can be used for the storage of triangle indices. The choice depends on the number of triangles generated in a single pattern: when the number of triangles is small, each index can be compressed to an 8-bit integer; for complex patterns, 16 bits can be chosen to maintain expressiveness. This compression strategy is based on Mega-Geometry's cluster based tessellation feature[].
+Besides the compression strategies mentioned above, the first paper, AMD proposes a lossy compression format for small meshlet patches by quantizing vertex coordinates and encoding topology compactly, achieving efficient and hardware-friendly geometry compression @barczak2024dgf. @evans1996optimizing focuses on triangle strips, optimizing rendering efficiency by reordering vertex sequences and constructing the longest possible strips to reduce redundant vertex transmission. @lenz2009optimized improve the pattern-based mesh refinement method @boubekeur2005generic, storing only essential refinement patterns and local information, significantly reducing the storage and transmission overhead of refined meshes while enabling efficient GPU parallel processing.
 
-In Compute Shader, the vertex attributes (position, normal, UV, etc.) generated dynamically by pattern can be restored in a similar compressed way. Since the Shader specializes in parallel computation, compression and decompression have minimal impact on performance and significantly reduce the graphics memory usage. Based on the symmetry of the pattern, only half of the vertex attributes need to be stored, and the other half can be restored by symmetric computation, which further reduces the size of the data.
+// The choice depends on the number of triangles generated in a single pattern: when the number of triangles is small, each index can be compressed to an 8-bit integer; for complex patterns, 16 bits can be chosen to maintain expressiveness. This compression strategy is based on Mega-Geometry's cluster based tessellation feature @RTXMG. In Compute Shader, the vertex attributes (position, normal, UV, etc.) generated dynamically by pattern can be restored in a similar compressed way. 
+
+// Based on the symmetry of the pattern, only half of the vertex attributes need to be stored, and the other half can be restored by symmetric computation, which further reduces the size of the data @lenz2009optimized.
 
 == Adaptive Patterns
 
@@ -52,7 +56,7 @@ In Compute Shader, the vertex attributes (position, normal, UV, etc.) generated 
 
 The patterns we have used so far are uniform patterns, i.e., the same tessellation rate is applied to all three sides of the triangle. Although this approach is simple to implement and to some extent can avoid the crack problem caused by T-junction by uniform tessellation rate, it still has many limitations in practical application.
 
-From the perspective of rendering efficiency, different regions often have different geometric complexity or viewpoint importance. Uniform tessellation is similar to the common discrete LOD method in games, which is unable to flexibly adjust the tessellation density of each region according to the difference in geometric complexity or viewpoint, thus introducing a large number of redundant vertices. Compared to adaptive patterns based on curvature or viewing angle, uniform patterns generate too many invalid vertices in flat areas or areas far away from the viewing angle, adding unnecessary rendering and memory overhead. //see Figure X.
+From the perspective of rendering efficiency, different regions often have different geometric complexity or viewpoint importance. Uniform tessellation is similar to the common discrete LOD method in games, which is unable to flexibly adjust the tessellation density of each region according to the difference in geometric complexity or viewpoint, thus introducing a large number of redundant vertices. Compared to adaptive patterns @boubekeur2008flexible @RTXMG based on curvature or viewing angle, uniform patterns generate too many invalid vertices in flat areas or areas far away from the viewing angle, adding unnecessary rendering and memory overhead. //see Figure X.
 
 // Taking “distance to camera” as an example, it is obviously unnecessary to use the same tessellation density in the farther region as in the nearer region, which will result in a large number of vertices being wasted in the region with low visual contribution. Compared to adaptive patterns based on curvature or viewing angle, uniform patterns generate too many invalid vertices in flat areas or areas far away from the viewing angle, adding unnecessary rendering and memory overhead. see figure X.
 //
@@ -67,8 +71,7 @@ From the perspective of rendering efficiency, different regions often have diffe
 
 // 根据我有限的研究与调查，我发现不管是在最新的mega geometry中，还是稍微早一些的gpu tessellation[]，甚至是hardware tessellation，他们都不可避免的会在shared edge上生成重复的顶点，因为不论是稍微前沿一些的技术还是hardware tessellation他们都是以single triangle or quad作为tessellation的对象，并没有考虑整体的拓扑信息. 这就造成了原本连续的三角形突然间就变成了两个separated的三角形，with overlapping vertices on their shared edges, see Figure X. 
 
-Based on my limited research and investigation, I found that no matter in the latest mega geometry, or slightly earlier gpu tessellation[], or even hardware tessellation, they will inevitably generate duplicate vertices on the shared edge, because they are single triangle or quad as the object of tessellation, and do not consider the overall topological information. This results in a adjacent triangle suddenly becoming two separated triangles, with overlapping vertices on their shared edges, see Figure 43. 
-
+Based on my limited research and investigation, I found that no matter in the latest mega geometry @RTXMG, or slightly earlier gpu tessellation @khoury2019adaptive @microsoftd3d11features @schwarz2009fast, or even hardware tessellation, they will inevitably generate duplicate vertices on the shared edge, because they are single triangle or quad as the object of tessellation, and do not consider the overall topological information. This results in a adjacent triangle suddenly becoming two separated triangles, with overlapping vertices on their shared edges, see Figure 41.
 
 #figure(
   image("figures/ad2sep.svg", width: 90%),
@@ -81,8 +84,7 @@ Based on my limited research and investigation, I found that no matter in the la
 
 // 而这也是导致我在重新计算normal的时候，会造成原本我们希望相邻三角形的face normal会作用在同一个顶点上，但是由于重复顶点的原因，现在face normal只会作用在当前构成该三角形的三个顶点上，see Figure X，使得最终的三角形内部的法线插值不够平滑，更坏的是，如果模型的curvature过大，那么两个相邻的三角形则会产生相聚较大的法线朝向，此时这两个三角形的shared edge就会开始争夺这条边的渲染权利，因为他们看似是一条边，但其实是不同的但是overlapped的顶点组成的,see Figure X
 
-That's why when I recalculate the normal, it will cause the face normals of adjacent triangles contribute to the same shared vertex to ensure smooth normal interpolation now only affects the three vertices explicitly forming the current triangle due to the presence of duplicated vertices, each face normal, see Figure 44, which will make resulting normals look flat, see Figure X.
-
+That's why when I recalculate the normal, it will cause the face normals of adjacent triangles contribute to the same shared vertex to ensure smooth normal interpolation now only affects the three vertices explicitly forming the current triangle due to the presence of duplicated vertices, each face normal, see Figure 42.
 
 #figure(
   image("figures/leftaccu.svg", width: 90%),
@@ -95,7 +97,7 @@ That's why when I recalculate the normal, it will cause the face normals of adja
 
 //![flat vs smooth]
 
-If the curvature of the model is too large, then two neighboring triangles will have a large converging normal direction, and the shared edges of the two triangles will start to fight for the right to render this edge, because they appear to be one edge, but they are actually composed of different but overlapped vertices, see Figure 45.
+If the curvature of the model is too large, then two neighboring triangles will have a large converging normal direction, and the shared edges of the two triangles will start to fight for the right to render this edge, because they appear to be one edge, but they are actually composed of different but overlapped vertices, see Figure 43.
 
 
 #figure(
@@ -113,21 +115,23 @@ If the curvature of the model is too large, then two neighboring triangles will 
 
 But causing such a visual flaw is not the worst result, the gpu memory consumed by generating redundant vertices is what we need to optimize more. In order to minimize the redundant vertices generated during tessellation, there is no very generic solution in the academic world so far, and since deduplication has a highly sequential nature, it is actually more suitable for CPU execution, and removing the redundant vertices in parallel in a compute shader is a relatively difficult task. 
 
-[], A highly parallelized vertices removal algorithm using cuda was proposed, but cuda is a different language, and forcing it to manipulate the data generated by the compute shader would introduce many additional operations such as memory mapping. 
+Wald et al. @wald2021gpgpu present a highly parallelized vertices removal algorithm using cuda was proposed, but cuda is a different language, and forcing it to manipulate the data generated by the compute shader would introduce many additional operations such as memory mapping. 
 
 // For example, generating 500mb of data somewhere in a frame and then compressing it to 200mb somewhere after that frame may reduce memory usage, but such behavior may result in undefined behavior
-Ideally, it is best to generate compressed data directly—i.e., data without duplicated vertices. For example, if 500 MB of data is generated at one stage of a frame and then compressed to 200 MB later in the same frame, this may reduce memory usage, but such behavior can potentially lead to undefined behavior.
+// Ideally, it is best to generate compressed data directly—i.e., data without duplicated vertices. For example, if 500 MB of data is generated at one stage of a frame and then compressed to 200 MB later in the same frame, this may reduce memory usage, but such behavior can potentially lead to undefined behavior.
 
-The duplicate vertices removal strategy will be differ from different tessellation strategy. For example, if the tessellation is a wild range tessellation, say based on the whole cluster, the duplicate vertices to be removed will only exist at the edges of the cluster. As a result, providing a universal solution for duplicate vertex removal remains difficult.
+As shown in the Figure 44, A pattern with tessellation level 10 results in approximately half of the vertices being duplicated. Although the proportion of duplicated vertices decreases as the tessellation factor increases, the absolute number of duplicate vertices continues to grow.
 
 //so it is hard to provide a generatic method to remove duplicate vertices.
 
 #figure(
-  image("figures/my.png", width: 30%),
+  image("figures/dupvertratio.png", width: 70%),
   caption: [
-    Missing
+    Proportion of duplicate vertices in each tessellation pattern
   ],
 )
+
+However, the duplicate vertices removal strategy will be differ from different tessellation strategy. For example, if the tessellation is a wild range tessellation, say based on the whole cluster, the duplicate vertices to be removed will only exist at the edges of the cluster. As a result, providing a universal solution for duplicate vertex removal remains difficult.
 
 //![duplicate vertex的占比问题]
 
@@ -160,15 +164,17 @@ The duplicate vertices removal strategy will be differ from different tessellati
 //
 // 为此，我们希望寻求一种方法，能够在保有 Compute Shader 所带来的灵活性与可编程性的同时，也能规避不必要的内存开销与计算浪费。这正是 Mesh Shader 被提出的初衷。Mesh Shader 最早由 NVIDIA 于 Turing 架构[]中引入，并在随后被 Microsoft DirectX 12 和 Vulkan API 正式支持, see Figure X.
 
-Although the Compute Shader-based tessellation scheme has a significant advantage over the traditional hardware pipeline in terms of flexibility, it also brings a non-negligible overhead problem. 
+// Although the Compute Shader-based tessellation scheme has a significant advantage over the traditional hardware pipeline in terms of flexibility, it also brings a non-negligible overhead problem. 
 
-Since the Compute Shader cannot directly pass the generated vertex data into the subsequent graphics pipeline, its output must be written back to the GPU's memory, which not only brings additional IO operations, but also increases the pressure on the memory bandwidth, affecting the overall rendering performance. In contrast, vertex data generate by the hardware tessellation usually is directly written to the GPU cache and participate in the subsequent graphics rendering process without the intermediate step of writing back to the memory, which greatly reduces the waste of resources.
+Although Compute Shader-based tessellation offers greater flexibility than the traditional hardware pipeline, it introduces notable overhead. Since it can't pass vertex data directly into the graphics pipeline, the output must be written to GPU memory, causing extra I/O and memory bandwidth pressure. In contrast, hardware tessellation writes vertex data directly to the GPU cache, avoiding this step and improving overall rendering efficiency.
+
+// Since the Compute Shader cannot directly pass the generated vertex data into the subsequent graphics pipeline, its output must be written back to the GPU's memory, which not only brings additional IO operations, but also increases the pressure on the memory bandwidth, affecting the overall rendering performance. In contrast, vertex data generate by the hardware tessellation usually is directly written to the GPU cache and participate in the subsequent graphics rendering process without the intermediate step of writing back to the memory, which greatly reduces the waste of resources.
 
 // Therefore, we need a way to avoid unnecessary memory overhead and computational waste while maintaining the flexibility and programmability of a Compute Shader. This is why Mesh Shaders were first introduced by NVIDIA in the Turing architecture [] and have since been officially supported by Microsoft DirectX 12 and the Vulkan API, see Figure X.
 
 // Therefore, Mesh Shader introduced by Nvidia[] allow us to avoid unnecessary overhead while maintaining the flexibility and high parallel computational capability. As shown in the Figure X, mesh shader和hardware tessellation一样，可以直接将输出的数据可以直接参与后续的渲染工作，并且由于task shader的存在，可以动态的dispatch mesh shader的数量，从而充分利用gpu高并行计算的能力
 
-Therefore, Mesh Shader introduced by Nvidia[] allow us to avoid unnecessary overhead while maintaining the flexibility and high parallel computational capability. As shown in the Figure 47, mesh shader, similar to hardware tessellation, can directly pass the output data to the subsequent rendering work, and due to the existence of task shader, it can dynamically dispatch the number of mesh shaders, thus fully utilizing the gpu's highly parallel computing capability. dispatch the number of mesh shaders, thus fully utilizing the gpu's highly parallel computing capability.
+Mesh Shader @nvidia_turing_mesh_shaders somehow allow us to avoid unnecessary overhead while maintaining the flexibility and high parallel computational capability. As shown in the Figure 47, mesh shader, similar to hardware tessellation, can directly pass the output data to the subsequent rendering work, and due to the existence of task shader, it can dynamically dispatch the number of mesh shaders, thus fully utilizing the gpu's highly parallel computing capability. dispatch the number of mesh shaders, thus fully utilizing the gpu's highly parallel computing capability.
 
 #figure(
   image("figures/meshpipe.jpg", width: 100%),
@@ -180,7 +186,7 @@ Therefore, Mesh Shader introduced by Nvidia[] allow us to avoid unnecessary over
 
 // 此外，Mesh Shader Pipeline 还能有效解决传统渲染管线中存在的一些性能瓶颈。例如，在传统管线中，同一个vertex有可能被多个vertex shader执行，导致完全没必要的计算浪费,see Figure X。同时，由于图形流水线各阶段固定，缺乏足够的灵活性，也难以充分发挥现代 GPU 在大规模并行计算方面的优势。相比之下，Mesh Shader 允许以工作组（Workgroup）为单位，自主生成整个图元结构，并将结果直接写入 GPU 的本地 Cache，从而省去了中间回写显存的开销。
 
-In addition, the Mesh Shader Pipeline can effectively solve some of the performance bottlenecks that exist in traditional rendering pipelines. For example, in a traditional pipeline, the same vertex may be executed by multiple vertex shaders, resulting in completely unnecessary wasted computation. At the same time, the fixed phases of the graphics pipeline lack sufficient flexibility and make it difficult to fully utilize the advantages of modern GPUs in massively parallel computation.  
+In addition, the Mesh Shader Pipeline can effectively solve some of the performance bottlenecks that exist in traditional rendering pipelines. For example, in a traditional pipeline, the same vertex may be executed by multiple vertex shaders, resulting in completely unnecessary wasted computation @gpuopen_mesh_shaders. At the same time, the fixed phases of the graphics pipeline lack sufficient flexibility and make it difficult to fully utilize the advantages of modern GPUs in massively parallel computation.  
 
 // In contrast, the Mesh Shader allows the generation of entire primitive structures at the workgroup level. and the results written directly to the GPU's local Cache, eliminating the overhead of writing back to the graphics memory.
 
@@ -192,12 +198,12 @@ In addition, the Mesh Shader Pipeline can effectively solve some of the performa
 //
 // At the same time, since the execution range of a Mesh Shader is limited by a single workgroup, the maximum number of vertices and triangles that can be generated by a Mesh Shader has an upper limit, 128 Primitive groups, 256 vertices depending on different hardware and GPU vendor. Therefore, the maximum size of a pattern is limited by this constraint, we can avoid this problem by keeping split the triangle whose tessellation level is too large to match any existing pattern until it satisfies to the pattern we have[mega].
 
-However, the output of mesh shaders are limited by hardware constraints—typically up to 256 vertices and 128 primitives per workgroup. As a result, the size of reusable patterns is also constrained. To handle cases where a triangle’s tessellation level exceeds available patterns, we can iteratively split it until it fits within a supported pattern [Mega Geometry].
+However, the output of mesh shaders are limited by hardware constraints—typically up to 256 vertices and 128 primitives per workgroup @nvidia_turing_mesh_shaders. As a result, the size of reusable patterns is also constrained. To handle cases where a triangle’s tessellation level exceeds available patterns, we can iteratively split it until it fits within a supported pattern @RTXMG.
 
 == Visual effect
 
 // 还有提一下即便使用了4k的displacement texture，在Tessellation rate非常高的时候同样会出现由于精度不足出现的artifacts，see Figure 48
-Even when using a 4K displacement texture, at very high tessellation rates each triangle can become smaller than a single pixel. In such cases, the limited bit depth used to store scalar values may not provide enough precision, leading to artifacts as shown in Figure 48.
+Even when using a 4K resolution displacement texture, at very high tessellation rates each triangle can become smaller than a single pixel. In such cases, the limited bit depth used to store scalar values may not provide enough precision, leading to artifacts as shown in Figure 48.
 
 #figure(
   image("figures/dmartifacts.png", width: 60%),
@@ -209,7 +215,7 @@ Even when using a 4K displacement texture, at very high tessellation rates each 
 
 // 由之前的结果可以看出, 由于我们只是增加了三角形的密度，并没有做像subdivision surface那样的平滑处理，所以从视觉效果上看，即使通过rasterizer为三角形内部的顶点信息做了插值平滑处理，但是模型的外轮廓还是显得很棱角分明的, see figure X
 
-As you can see from the previous results, since we only increased the density of the triangles and did not do any smoothing like the subdivision surface, visually, even though we interpolated and smoothed the vertex normal inside the triangles with the rasterizer, the silhouette of the model still looks sharp and angular, see Figure 49.
+As you can see from the previous results, since we only increased the density of the triangles and did not do any smoothing like the subdivision surface @sharp2000subdivision, visually, even though we interpolated and smoothed the vertex normal inside the triangles with the rasterizer, the silhouette of the model still looks sharp and angular, see Figure 49.
 
 #figure(
   kind:image,
@@ -217,7 +223,7 @@ As you can see from the previous results, since we only increased the density of
   table(
     columns: 2,
     stroke:none,
-    image("figures/tessside.png"),
+    image("figures/tessside.png"), // use hardware tessellation
     image("figures/subdside.png", height: 27%),
   )
 )
@@ -235,11 +241,36 @@ Common approaches to improve this are generally divided into two categories: one
 //
 // 另一种代表方法是PN Triangle，通过在平面三角形基础上构造高阶曲面，用较少的计算代价获得较为平滑的视觉效果。PN Triangle通过插值顶点位置和法线，构建二次Bezier曲面，从而显著改善平面三角形带来的棱角感，且相比完整Subdivision，计算更为轻量，适合实时渲染。除了PN Triangle，近年来基于着色器的曲面细分与拟合技术也逐渐兴起，比如利用Bezier Patch、Gregory Patch等高阶曲面模型
 
-Subdivision Surface is actually the iterative application of Subdivision Schemes [] on top of a coarse mesh to achieve surface smoothing by continuously generating and weighting vertex positions. This approach is particularly computationally intensive in the case of adaptive subdivision. Especially for animated mesh, the Subdivision Level of each frame may be different due to the change of geometric complexity over time, which not only requires the dynamic generation of a large number of vertices, but also needs to offset the positions of existing vertices according to the weighting rule to ensure the surface smoothness. In this regard, studies such as [Efficient Quad Tree] have proposed to pre-generate the Subdivision plan by using the adaptive quad tree structure, thus realizing efficient GPU rendering of Subdivision Surface in the GPU.
 
-Another representative method is PN Triangle, which constructs higher-order surfaces based on planar triangles to achieve smoother visual effects with less computational cost. PN Triangle interpolates vertex positions and normals to construct quadratic Bezier surfaces, which significantly improves the angularity of planar triangles and is lighter in computation compared to the full Subdivision. 
 
-It is also lighter than a full Subdivision, making it suitable for real-time rendering. In addition to PN Triangle, recent years have seen a rise in shader-based surface subdivision and fitting techniques, such as the use of Bezier Patch, Gregory Patch, and other higher-order surface models.
+@lee2000displaced Displaced subdivision surfaces
+
+@niessner2013rendering Rendering subdivision surfaces using hardware tessellation
+
+@melapudi2021time Time and Memory Efficient Displacement Map Extraction
+
+@brainerd2016efficient quad tree
+
+@niessner2013rendering subd hw tess
+
+@derose2023subdivision subd in animation
+
+@doo1978subdivision doo subd
+
+@kobbelt20003 3 subd
+
+@stam1998evaluation eval method
+
+@catmull1998recursively catmull subd
+
+@microsoft_thesis_10 loop
+
+
+Subdivision Surface is actually the iterative application of Subdivision Schemes @catmull1998recursively @doo1978subdivision @microsoft_thesis_10 @kobbelt20003 on top of a coarse mesh to achieve surface smoothing by continuously generating and weighting vertex positions. These approaches are particularly computationally intensive in the case of adaptive subdivision. Especially for animated mesh @derose2023subdivision, the Subdivision Level of each frame may be different due to the change of geometric complexity over time, which not only requires the dynamic generation of a large number of vertices, but also needs to offset the positions of existing vertices according to the weighting rule to ensure the surface smoothness. In this regard, studies such as Brainerd et al. @brainerd2016efficient have proposed to pre-generate the Subdivision plan by using the adaptive quad tree structure, thus realizing efficient GPU rendering of Subdivision Surface in the GPU.
+
+Another representative method is PN Triangle @vlachos2001curved @boubekeur2005scalar @schwarz2006gpu, which constructs higher-order surfaces based on planar triangles to achieve smoother visual effects with less computational cost. PN Triangle interpolates vertex positions and normals to construct quadratic Bezier surfaces, which significantly improves the angularity of planar triangles and is lighter in computation compared to the full Subdivision. 
+
+It is also lighter than a full Subdivision, making it suitable for real-time rendering. In addition to PN Triangle, recent years have seen a rise in shader-based surface subdivision and fitting techniques, such as the use of Bezier Patch, Gregory Patch @loop2009approximating, and other higher-order surface models.
 
 //2. Virtualize geometry + cluster based tessellation [unreal engine 5.5 doc]
 // --- Subdivision surface approximation

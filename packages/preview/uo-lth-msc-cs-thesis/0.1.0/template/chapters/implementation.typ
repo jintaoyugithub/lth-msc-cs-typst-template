@@ -78,15 +78,19 @@ In Table 2, we present the mesh data we used in this project.
   fill: gray.lighten(20%),
 )[Disk Size]
 
+#let i = table.cell(
+  fill: gray.lighten(20%),
+)[Memory Size]
+
 #figure(
   table(
-    columns: 5,
+    columns: (5cm, 2cm, 2cm, 2cm, 2cm, 2cm),
     align: left,
-    rows: 0.8cm,
-    a, e, f, g, h,
-    [Big guy coarse mesh], [2900], [1452], [2900], [145 KB],
-    [Big guy detail mesh], [2,969,600], [1,484,802], [2,969,600], [241 MB],
-    [Big guy displacement texture], table.cell(colspan: 3, align: center)[N/A], [],
+    rows: 1.0cm,
+    a, e, f, g, h, i,
+    [Big guy coarse mesh], [2900], [1452], [2900], [145 KB], [292 KB],
+    [Big guy detail mesh], [2,969,600], [1,484,802], [2,969,600], [241 MB], [363.7 MB],
+    [Big guy displacement texture], table.cell(colspan: 3, align: center)[N/A], [1.2 MB],[13.2 MB]
   ),
   caption: [Input Mesh Data Reivew],
 )
@@ -108,7 +112,7 @@ The lookup table stores the entry points for each pattern, making it efficient t
 
 === Real time framework
 
-During the runtime phase, the system runs a sequence of compute-shader-based stages: resource cleanup, triangle visibility determination, tessellation level computation, pattern-based tessellation, and normal recalculation (see Figure 18). Since compute shaders operate within an isolated pipeline and cannot directly render to the screen, we must transfer the generated vertex and index data to the traditional rendering pipeline using shader storage buffer objects (SSBOs), which are then bound to the vertex and fragment shaders.
+During the runtime phase, the system runs a sequence of compute-shader-based stages: resource cleanup, triangle visibility determination, tessellation level computation, pattern-based tessellation, and normal recalculation, see Figure 18. Since compute shaders operate within an isolated pipeline and cannot directly render to the screen, we must transfer the generated vertex and index data to the traditional rendering pipeline using SSBO, which are then bound to the vertex and fragment shaders.
 
 #figure(
   image("figures/realtimefw.png", width: 100%),
@@ -117,7 +121,7 @@ During the runtime phase, the system runs a sequence of compute-shader-based sta
   ],
 )
 
-At the very beginning of the pipeline, several resources must be reset, see Table X, because they varied every frame, such as buffer store the triangles that are visible, atomic counter that track generated vertices and triangles, see Table X. Once the resources are properly reset, the system proceeds to determine which triangles in the input mesh are visible to the current camera, then we compute the tessellation level for each vertices from the visible triangles, based on that, the tessellation compute shader will fetch the corresponding pattern from the tessellation patterns set with the look up index, generated vertices and indices data are then written to two final buffer and subsequently bond to vertex shader to finalize the rendering.
+At the very beginning of the pipeline, several resources must be reset, because they varied every frame, such as buffer store the triangles that are visible, atomic counter that track generated vertices and triangles, see Table 1. Once the resources are properly reset, the system proceeds to determine which triangles in the input mesh are visible to the current camera, then we compute the tessellation level for each vertices from the visible triangles, based on that, the tessellation compute shader will fetch the corresponding pattern from the tessellation patterns set with the look up index, generated vertices and indices data are then written to two final buffer and subsequently bond to vertex shader to finalize the rendering.
 
 If there are displacement textures available, vertex positions are adjusted during the tessellation stage and one additional compute pass is needed to re-calculate the normals from the the displaced vertices.
 
@@ -325,18 +329,18 @@ To this end, we employ a strategy similar to fix culling function in the graphic
 
 // 完成可见性筛选后，我们为剩余的顶点分配曲面细分等级。该等级由顶点到摄像机的距离决定，距离越近的顶点会被赋予更高的细分等级，从而在视觉上获得更丰富的几何细节。下图展示了细分等级随距离变化的策略：
 
-After completing the visibility filter, we assign a surface subdivision level to the remaining vertices. The level depends on the distance from the vertex to the camera - vertices that are closer will be assigned a higher subdivision level, resulting in visually richer geometric details. The Figure 23 illustrates the strategy of varying the tessellation level with distance to the camera.
+// After completing the visibility filter, we assign a surface subdivision level to the remaining vertices. The level depends on the distance from the vertex to the camera - vertices that are closer will be assigned a higher subdivision level, resulting in visually richer geometric details. The Figure 23 illustrates the strategy of varying the tessellation level with distance to the camera.
+//
+// //![基于摄像机距离分配细分等级示意图]
+//
+// #figure(
+//   image("figures/my.png", width: 40%),
+//   caption: [
+//     Missing
+//   ],
+// )
 
-//![基于摄像机距离分配细分等级示意图]
-
-#figure(
-  image("figures/my.png", width: 40%),
-  caption: [
-    Missing
-  ],
-)
-
-However, the focus of this paper is on the design of the rendering pipeline framework based on the Compute Shader. In order to simplify the implementation and avoid the T-Junction[] problem caused by the inconsistency of the tessellation levels of neighboring triangles, we choose to uniformly assign the same level to all vertices. The possible impact of this strategy and how we further deal with the T-Junction problem will be discussed in detail in the following sections.
+However, the focus of this paper is on the design of the rendering pipeline framework based on the Compute Shader. In order to simplify the implementation and avoid the T-Junction problem caused by the inconsistency of the tessellation levels of neighboring triangles, we choose to uniformly assign the same level to all vertices. The possible impact of this strategy and how we further deal with the T-Junction problem will be discussed in detail in the following sections.
 
 // 然而，本文主要关注基于 Compute Shader 的渲染管线框架设计，因此在实际实现中，为了避免由相邻三角形存在不同细分等级所引发的T-Junction 问题，我们选择为所有顶点统一赋予相同的细分等级。我们会在后续的章节中讨论如何解决这个问题
 
@@ -394,9 +398,9 @@ TODO
 // 如果我们只使用face normal的话，会导致每个三角形最后看起来很平，所以我们需要计算每个vertices normal, 这样rasterizer就会帮我们插值三角形内部的法线值, see figure x. 为了得到更加smooth的法线，本文使用了另外一种方法, 可以看出一个顶点可以被多个与之连接的顶点影响，针对每一个细分的三角形，我们构造其face normal，这个face normal会被作用在组成这个三角形的三个顶点上。所以，以figure x中的三角形拓扑举例子，点x被多少多少个三角形影响，那么针对每一个与之相连的三角形，构造face normal，叠加在构造该三角形的三个点上，可以看出，点x将会叠加x个三角形的face normals，因为我们是针对每一个三角形，由于compute shader高并发的特性，在该compute shader结束执行之前，我们都没办法得到一个最终的normals，所以我们在后续使用的时候将其进行normalize而得到正常范围内的normal
 
 // In the case of dynamic water or procedural generated terrain, where the vertex positions are offset by mathematical functions or noise function e.g. perlin noise[], the normals can also be calculated directly from the corresponding mathematical expressions, 甚至对于terrain来说，本身垂直向上的法线，就算不做过多处理，能还能得到一个大致正确的光照结果
-In the case of dynamic water or procedurally generated terrain, where vertex positions are offset by mathematical functions or noise functions such as Perlin noise[], normals can also be directly calculated from the corresponding mathematical expressions. Even for terrain, whose normals naturally point mostly upwards, reasonably accurate lighting results can still be achieved without extensive processing.
+In the case of dynamic water or procedurally generated terrain, where vertex positions are offset by mathematical functions or noise functions such as Perlin noise @perlin1985image, normals can also be directly calculated from the corresponding mathematical expressions. Even for terrain, whose normals naturally point mostly upwards, reasonably accurate lighting results can still be achieved without extensive processing.
 
-However, when dealing with complex 3D models, the situation is different. If we don't rely on a normal map, we need to recalculate the displaced normals in some other way. 
+However, when dealing with complex 3D models, the situation is different. If we don't rely on a normal map, we need to recalculate the displaced normals in some other way. Computing derivatives from scalar displacement texture gives us the normal in tangent space, but it requires extra data to build a TBN matrix. Calculating partial derivatives per point also needs access to neighboring points, which is not straightforward for triangle primitives, see Figure 25.
 
 //![想一下三角形找垂直方向的点]
 
@@ -407,7 +411,7 @@ However, when dealing with complex 3D models, the situation is different. If we 
   ],
 )
 
-If only face normal is used, each triangle will appear distinctly flat and the overall effect will be stiff. Therefore, it is more desirable to compute normals for each vertex, so that during the rasterization phase, the GPU can interpolate the normals inside the triangles, resulting in a smoother surface effect. Specifically, for each tessellated triangle, we first construct its face normals and accumulate them to each of the three vertices constituting the triangle. Taking the topology in Figure 27 as an example, if a vertex X is connected to multiple triangles, then that vertex will receive the face normals from each neighboring triangle. In this way, the final normal of vertex X is jointly determined by the normals of all its neighboring triangles, providing better smoothing.
+If only face normal is used, each triangle will appear distinctly flat and the overall effect will be stiff. Therefore, it is more desirable to compute normals for each vertex, so that during the rasterization phase, the GPU can interpolate the normals inside the triangles, resulting in a smoother surface effect. Specifically, for each tessellated triangle, we first construct its face normals and accumulate them to each of the three vertices constituting the triangle. Taking the topology in Figure 26 as an example, if a vertex X is connected to multiple triangles, then that vertex will receive the face normals from each neighboring triangle. In this way, the final normal of vertex X is jointly determined by the normals of all its neighboring triangles, providing better smoothing.
 
 #figure(
   image("figures/accuproc.svg", width: 100%),

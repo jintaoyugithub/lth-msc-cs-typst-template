@@ -169,7 +169,7 @@ which:
 
 == Compute shader
 
-To fulfill demand for arbitrary computational task, compute shader as a shader stage, was introduced to execute massively parallel, general-purpose computation on the gpu. Unlike languages designed for gpgpu programming such as CUDA, compute shaders naturally benefit from tight integration with graphics APIs, allowing them to directly utilize graphics-related functions
+To fulfill demand for arbitrary computational task, compute shader @khronoscomputeshader as a shader stage, was introduced to execute massively parallel, general-purpose computation on the gpu. Unlike languages designed for gpgpu programming such as CUDA @nvidia2025cuda, compute shaders naturally benefit from tight integration with graphics APIs, allowing them to directly utilize graphics-related functions
 
 // differ from the other shader stage as it's not part of the traditional rendering pipeline, was introduced in DirectX11 and OpenGL 4.3 
 
@@ -187,7 +187,7 @@ Compute shader has a very subtle relationship with the other stages in the overa
 // )
 //! [vulkan graphics pipeline]
 
-During the execution of the Compute Shader, the execution model is defined by **Work Groups** and Invocations**, which control how tasks are scheduled in parallel on the GPU. Each workgroup consists of multiple threads, and each thread is an Invocation; both the workgroup and the number of threads define the layout of the computational tasks in a three-dimensional way, and the determination of the dimentions is controlled by the dimention of the data you're put in.
+During the execution of the Compute Shader, the execution model @vulkan_tutorial_compute_shader is defined by Work Groups and Invocations, which control how tasks are scheduled in parallel on the GPU. Each workgroup consists of multiple threads, and each thread is an Invocation; both the workgroup and the number of threads define the layout of the computational tasks in a three-dimensional way, and the determination of the dimentions is controlled by the dimention of the data you're put in.
 
 #figure(
   image("figures/csmodel.png", width: 100%),

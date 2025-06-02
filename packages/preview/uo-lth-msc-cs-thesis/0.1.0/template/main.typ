@@ -9,7 +9,9 @@
 
 #show link: underline
 
-TODO: 250 words
+Traditional hardware-based tessellation has long been used for surface refinement in real-time rendering, yet suffers from limited flexibility, lack of programmability, and inefficient handling of geometry reuse. These constraints become more pronounced when adapting to modern rendering demands such as dynamic displacement, flexible LOD strategies, and memory-aware mesh reconstruction. To overcome these limitations, we introduce a compute-shader-based geometry reconstruction framework that leverages precomputed tessellation patterns to dynamically refine coarse meshes in real time. //Our method separates the refinement process from the fixed-function pipeline, enabling fine-grained control over tessellation factors, visibility-based culling, displacement mapping, and normal recalculation. 
+
+The proposed system is fully programmable, supports arbitrary topologies, and enables GPU-side generation of high-density primitives with efficient memory usage. Through experiments, we compare our method against widely adopted approaches. We demonstrate that our method reduces mesh loading times and improves rendering efficiency while maintaining comparable visual quality. This work contributes a practical, scalable tessellation solution, and offers a step toward flexible, shader-driven geometry pipelines suited for future real-time graphics applications.
 
 #v(20pt)
 #line(length:100%, stroke: 0.3pt)
@@ -63,13 +65,13 @@ TODO: 250 words
   acknowledgements: acknowledgements,
   abstract: abstract,
 
-  keywords: [],
+  keywords: [Computer Graphics, Geometry Processing, GPU-based Tessellation, Mesh Refinement] 
 
-  popular_science_summary: (
-    title: [#lorem(6)],
-    abstract: include("popsci/abstract.typ"),
-    body: include("popsci/body.typ"),
-  )
+  // popular_science_summary: (
+  //   title: [#lorem(6)],
+  //   abstract: include("popsci/abstract.typ"),
+  //   body: include("popsci/body.typ"),
+  // )
 )
 
 // FYI:
