@@ -314,7 +314,7 @@ Using the above method, we can efficiently pre-generate triangle uniform pattern
 
 In addition to resource initialization, the formal execution of a real-time rendering pipeline begins with two key steps: rejection of non-visible triangles and surface tessellation rate assignment. Discarding invisible triangles at the initial stage of the pipeline is essential because these triangles do not contribute to the final result in subsequent computations, but consume valuable computational and memory resources, resulting in wasted performance.
 
-To this end, we employ a strategy similar to fix culling function in the graphics hardware, i.e. back culling to determine the visibility of triangles. Specifically, we first construct a face normal for each triangle and compute the dot product between it and the camera view direction. If the dot product is greater than zero, the triangle is facing the camera and is visible; conversely, if the dot product is less than or equal to zero, the triangle has its back to the camera and should be culled. This approach is both simple and efficient, and is especially suitable for parallel computing environments.
+To this end, we employ a strategy similar to fixed function culling in the graphics hardware, i.e. back culling to determine the visibility of triangles. Specifically, we first construct a face normal for each triangle and compute the dot product between it and the camera view direction. If the dot product is greater than zero, the triangle is facing the camera and is visible; conversely, if the dot product is less than or equal to zero, the triangle has its back to the camera and should be culled. This approach is both simple and efficient, and is especially suitable for parallel computing environments.
 
 //![背面剔除示意图]
 
@@ -416,11 +416,11 @@ If only face normal is used, each triangle will appear distinctly flat and the o
 #figure(
   image("figures/accuproc.svg", width: 100%),
   caption: [
-   Affected region of normal recalculation on the central triangle(left) and normal accumulate process(mid and right)
+    todoclear
   ],
 )
 
-Since this process is executed in parallel in the Compute Shader, the final normals of all vertices are not immediately available until the end of the calculation Therefore, these normals need to be normalized to ensure they are in the correct range before they are subsequently used.
+Since this process is executed in parallel in the Compute Shader, the final normals of all vertices are not immediately available until the end of the calculation. Therefore, these normals need to be normalized to ensure they are in the correct range before they are subsequently used.
 
 // #figure(
 //   image("figures/my.png", width: 30%),

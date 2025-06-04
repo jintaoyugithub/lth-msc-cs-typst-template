@@ -3,7 +3,9 @@
 _This chapater aims to introduce the methodology involved to address the research questions and challenges, including the literature study, implementation overview as well as tools and framework used._
 #v(15pt)
 
-== Literature Study
+== Literature Study 
+
+todo: move to chapater 2
 
 The literature study has been carried out throughout the work of this project, most of the references were found through Google Scholar and the ACM Digital Library. _compute shader tessellation_, _gpgpu tessellation_ are the main focus of the initial research. 
 
@@ -33,7 +35,7 @@ During runtime, for each visible triangle from the input coarse mesh, we select 
 
 == Tools and Framework
 
-The development of our system is based on several key tools and frameworks. The graphics backend is built on Vulkan with the shading language GLSL. _nvpro_ from Nvisia is used to fast build Vulkan application and provide several useful utilities, including convince UI framework and profiling tools. The c++ library _tinyobjloader_ is used to load models in wavefront format, the open-source _stb_ library is employed for image loading. _ktx2_ is the primarily format of the texture used in this project to reduce GPU memory usage. For graphics debugging, we rely on Nvidia _Nsight_ and _RenderDoc_. The 3D model used in this project was created in ZBrush based on the _Big Guy_ character[].
+The development of our system is based on several key tools and frameworks. The graphics backend is built on Vulkan with the shading language GLSL. _nvpro_ from Nvidia is used to fast build Vulkan application and provide several useful utilities, including convince UI framework and profiling tools. The c++ library _tinyobjloader_ is used to load models in wavefront format, the open-source _stb_ library is employed for image loading. _ktx2_ is the primarily format of the texture used in this project to reduce GPU memory usage. For graphics debugging, we rely on Nvidia _Nsight_ and _RenderDoc_. The 3D model used in this project was created in ZBrush based on the _Big Guy_ character[].
 
 
 // vulkan graphics backend

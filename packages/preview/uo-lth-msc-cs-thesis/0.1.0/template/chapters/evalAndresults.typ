@@ -70,7 +70,7 @@ Here in Figure 28 and 29, we show how the same tessellation pattern with level 1
 
 //![terrain, monkey, bigguy with same pattern]
 
-But we definitely not satisfied with only 10 tessellation level, the following image demonstrate what is the model looks like with pattern 100 tessellation level.
+However, it is possible to increase the tessellation level to 100, the following image demonstrate what is the model looks like with pattern 100 tessellation level.
 
 #figure(
   image("figures/100tess.png", width: 100%),
@@ -102,7 +102,7 @@ Tessellation and displacement mapping have always played an important role in pr
 
 #figure(
   kind:image,
-  caption: [Terrain with 50 tessellation level(left) and then apply displacement mapping],
+  caption: [Terrain with 50 tessellation level(left) and with displacement mapping applied.
   table(
     columns: 2,
     stroke:none,
@@ -117,7 +117,7 @@ To evaluate the generality of our method, we further apply displacement to compl
 
 #figure(
   kind:image,
-  caption: [Big guy with 10 tessellation level(left) and then apply displacement mapping],
+  caption: [Big guy with 10 tessellation level(left) and with displacement mapping applied.],
   table(
     columns: 2,
     stroke:none,
@@ -145,7 +145,7 @@ In Figure 34, we can see that the lighting calculation after displacement is not
 )
 
 // 这是因为我们并没有对位移之后的顶点重新计算法线，一般来说deformed过后的mesh，由于表面的曲率发生变化，相应的对应的切线以及法线也会变化，see Figure X. 在terrain上可能不是很明显，Figure x中的结果说明在更复杂的3d模型上则更加容易看出
-This is because we have not recalculated the normals of the displaced vertices. Generally speaking, when a mesh is deformed, the curvature of the surface changes, and so do the corresponding tangents and normals, see Figure 35. While this may not be obvious on a terrain, the results in Figure 36 show that it is easier to see on more complex 3D models. visible on more complex 3d models.
+This is because we have not recalculated the normals of the displaced vertices. Generally speaking, when a mesh is deformed, the curvature of the surface changes, and so do the corresponding tangents and normals, see Figure 35. While this may not be obvious on a terrain, the results in Figure 36 show that it is easier to see on more complex 3D models. 
 
 //![terrain normal recal vs. no normal recal]
 
@@ -247,7 +247,7 @@ Following figure show the GPU time of each stage in millisecond with the tessell
 #figure(
   image("figures/tesstime.png", width: 85%),
   caption: [
-    GPU and CPU execution time of different stages
+    GPU and CPU execution time of different stages todomaketable
   ],
 )
 
@@ -331,7 +331,7 @@ While documenting the performance overhead of our own framework is necessary, in
 ]
 #v(15pt)
 
-In Table 2, we present comprehensive information about the input detailed mesh data. This section we present the subsequent analysis focusing on model loading time, rendering time and memory consumption. To get the same triangle amount, input coarse mesh will apply pattern with tessellation level 32 to generate $2900 * 32 * 32 = 2969600$ triangles.
+In Table 2, we present comprehensive information about the input detailed mesh data. This section we present the subsequent analysis focusing on model loading time, rendering time and memory consumption, see Figure 39. To get the same triangle amount, input coarse mesh will apply pattern with tessellation level 32 to generate $2900 * 32 * 32 = 2969600$ triangles.
 
 // #figure(
 //   table(
@@ -361,6 +361,7 @@ In Table 2, we present comprehensive information about the input detailed mesh d
 
 Since the generated vertices must inevitably be written back to GPU memory, the actual memory usage remains roughly the same — or even slightly higher due to the additional storage required for the displacement texture. However, the model loading time is significantly reduced from 27,820 ms to 86 ms, and the rendering performance also improves by approximately 37%, with the rendering time decreasing from 7.3 ms to 4.61 ms.
 
+todo: why render fast?
 
 #v(15pt)
 #block[
@@ -381,7 +382,7 @@ Since Hardware Tessellation directly stream generated primitive data to the GPU 
   ],
 )
 
-The figure above compares the rendering performance of the two approaches using the same tessellation factors. As we can see, at moderate tessellation levels, the compute shader-based tessellation shows slightly better processing times. When the tessellation factor is either too high or too low, hardware tessellation performs slightly faster.
+Figure 40 compares the rendering performance of the two approaches using the same tessellation factors. As we can see, at moderate tessellation levels, the compute shader-based tessellation shows slightly better processing times. When the tessellation factor is either too high or too low, hardware tessellation performs slightly faster.
 
 // #v(15pt)
 // #block[

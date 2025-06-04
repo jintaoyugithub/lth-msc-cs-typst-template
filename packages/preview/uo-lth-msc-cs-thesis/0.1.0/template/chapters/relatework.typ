@@ -5,14 +5,14 @@ _This chapter explain several key theories which are crucial to this thesis and 
 
 == Tessellation
 
-In computer graphics, tessellation describes the process of dividing existing primitives into smaller ones thereby achieving higher realism, see Figure 3. The primitives are usually triangles or quads, depending on the tessellation algorithm used, for example Catmull-Clack @catmull1998recursively. The main advantage of this process is that the GPU can generate a higher density of small tuples in real-time during the rendering phase while only transmitting a coarse mesh which is a model with simplified topology and lower number of primitives counts.  While enriching the detail of the model, improves the visual realism, it also decrease the bandwidth of data transfers between the CPU and the GPU.
+In computer graphics, tessellation describes the process of dividing existing primitives into smaller ones thereby achieving higher realism, see Figure 3. The primitives are usually triangles or quads, depending on the tessellation algorithm used, for example Catmull-Clack @catmull1998recursively. The main advantage of this process is that the GPU can generate a higher density of small tuples in real-time during the rendering phase while only transmitting a coarse mesh which is a model with simplified topology and lower number of primitives counts.  While enriching the detail of the model, improves the visual realism, it also decreases the bandwidth of data transfers between the CPU and the GPU.
 
 //! [Illustration: Surface Subdivision Principles and Element Delineation Process]
 
 #figure(
   image("figures/tessellation.png", width: 110%),
   caption: [
-    A human head model rendered under multiple tessellation levels. 
+    A human head model rendered under multiple tessellation levels. todoref
   ],
 )
 
@@ -65,7 +65,7 @@ Geometry representation is the fundamental concept in computer graphics when con
 
 // 拓扑结构在不同的领域定义其实是不一样的，在图形学几何分之中，拓扑结构描述了模型数据的连接和组织关系。而在以polygon为主导的实时渲染领域中，其拓扑结果就是通过点，线和面的组合来描述模型的连接关系, see Figure x.
 
-Topology is defined differently in different domains. In graphics geometry, topology describes the connections and organization of model data. In the real-time rendering, the topology results from a combination of points, lines and surfaces that describe the connectivity of the model, see Figure 5.
+Topology is defined differently in different domains. In graphics geometry, topology describes the connections and organization of model data. In real-time rendering, the topology results from a combination of points, lines and surfaces that describe the connectivity of the model, see Figure 5.
 
 #figure(
   image("figures/topology.png", width: 85%),
@@ -169,7 +169,7 @@ which:
 
 == Compute shader
 
-To fulfill demand for arbitrary computational task, compute shader @khronoscomputeshader as a shader stage, was introduced to execute massively parallel, general-purpose computation on the gpu. Unlike languages designed for gpgpu programming such as CUDA @nvidia2025cuda, compute shaders naturally benefit from tight integration with graphics APIs, allowing them to directly utilize graphics-related functions
+To fulfill demand for arbitrary computational tasks, compute shader @khronoscomputeshader as a shader stage, was introduced to execute massively parallel, general-purpose computation on the GPU. Unlike languages designed for GPGPU programming such as CUDA @nvidia2025cuda, compute shaders naturally benefit from tight integration with graphics APIs, allowing them to directly utilize graphics-related functions
 
 // differ from the other shader stage as it's not part of the traditional rendering pipeline, was introduced in DirectX11 and OpenGL 4.3 
 
@@ -177,7 +177,7 @@ To fulfill demand for arbitrary computational task, compute shader @khronoscompu
 
 === Pipeline and Architecture
 
-Compute shader has a very subtle relationship with the other stages in the overall graphic pipeline. The separate pipeline architecture means that the compute shader is able to operate independently of the traditional rendering pipeline, which provides flexibility but also creates a situation where While this provides flexibility, it also results in additional cost being necessary for the compute shader to interact with the traditional rendering pipeline, which is a limitation of this article and will be explained in detail in section 6.
+Compute shader has a very subtle relationship with the other stages in the overall graphic pipeline. The separate pipeline architecture means that the compute shader is able to operate independently of the traditional rendering pipeline, which provides flexibility but also creates a situation where additional cost being necessary for the compute shader to interact with the traditional rendering pipeline, which is a limitation of this article and will be explained in detail in section 6.
 
 // #figure(
 //   image("figures/cspipeline.png", width: 100%),
@@ -196,7 +196,7 @@ During the execution of the Compute Shader, the execution model @vulkan_tutorial
   ],
 )
 
-The number of workgroups and the number of threads in each group determine the total number of calls to the Compute Shader. For example, dispatching work groups with dimention of (8,1,1) including (64,1,1) invocations inside one work group will invoke the compute shader $8 times 1 times 1 times 64 times 1 times 1 = 512$ times
+The number of workgroups and the number of threads in each group determine the total number of calls to the Compute Shader. For example, dispatching work groups with dimention of (3,3,3) including (2,2,1) invocations inside one work group will invoke the compute shader $3 times 3 times 3 times 2 times 2 times 1 = 108$ times
 
 // ![vulkan graphics pipeline]
 //
@@ -210,7 +210,7 @@ The number of workgroups and the number of threads in each group determine the t
 
 === Data Access and Manipulation
 
-In order to enable Compute Shaders to read and write data flexibly, modern graphics APIs provide mechanisms such as SSBO and Storage Image. SSBO, as a general-purpose buffer object, is commonly used to store and manipulate structured data, while storage image is is used more for accessing image resources and is applicable to various tasks related to image processing. Through these two approaches, a compute shader can efficiently interact with internal and external data to support complex computation processes.
+In order to enable Compute Shaders to read and write data flexibly, modern graphics APIs provide mechanisms such as  Shader Storage Buffer Object (SSBO). and Storage Image. SSBO, as a general-purpose buffer object, is commonly used to store and manipulate structured data, while storage image is used more for accessing image resources and is applicable to various tasks related to image processing. Through these two approaches, a compute shader can efficiently interact with internal and external data to support complex computation processes.
 
 Typically, a compute shader can access data with a thread id, but during parallel execution, multiple threads may access the same memory address at the same time, especially when reading and writing to shared buffers. To avoid data contention without introducing expensive locking mechanisms, **Atomic operations ensure that only one thread can read or write to a target address at a given time, thus avoiding data conflicts while ensuring parallelism.
 
@@ -222,12 +222,12 @@ Typically, a compute shader can access data with a thread id, but during paralle
 
 Displacement Mapping @cook1984shade was originally a technique used to generate natural textures, and later it gained widespread application in computer graphics. As an alternative way to restore the details of the original model during real-time rendering, displacement mapping samples pre-baked or mathematically calculated vertex displacement data to modify the positions of the surface vertices of an object. 
 
-This allows for more precise detail by actually changing the shape of the object's surface, instead of just cheating the surface normals with normal maps do. Because the surface shape is really modified, displacement mapping also naturally fixes problems like self-shadowing and self-occlusion that normal or bump maps can’t handle well.
+This allows for more precise detail by actually changing the shape of the object's surface, instead of just cheating the surface normals which normal maps do. Because the surface shape is really modified, displacement mapping also naturally fixes problems like self-shadowing and self-occlusion that normal or bump maps can’t handle well.
 
 #figure(
   image("figures/dm.jpg", width: 80%),
   caption: [
-    Displacement mapping of a quad(top left) with a height map(bottom left)
+    Displacement mapping of a quad(top left) with a height map(bottom left) todoref
   ],
 )
 
@@ -266,7 +266,7 @@ Scalar Displacement and Vector Displacement are common in most use cases where t
 
 // 在hw tess问世之前，[]就提出了一种利用vertex shader来instantiate triangle pattern的做法，本文中许多概念也是从它的文章中借鉴来的。他们也提前在cpu保存了不同tessellation factor所需的pattern在一个三维数组中，并将这些数据上传到gpu memory让vertex shader的runtime的时候，可以直接对不同的pattern中的顶点进行空间变换，达到生成更多primitive的目的。
 
-Before Hardware Tessellation technique came out, Boubekeur et al. @boubekeur2005generic @boubekeur2008flexible proposed a practice of using a vertex shader to instantiate triangle patterns later Lenz et al. @lenz2009optimized present an improved version with efficient data storage, and many of the concepts in this article were borrowed from these articles. They saved the required patterns for different tessellation factors in a 3D array at the cpu in advance, and uploaded these data to the gpu memory to allow the vertex shader to directly perform transformations on vertices in different patterns to achieve the generation of more primitive. 
+Before Hardware Tessellation technique came out, Boubekeur et al. @boubekeur2005generic @boubekeur2008flexible proposed a practice of using a vertex shader to instantiate triangle patterns later Lenz et al. @lenz2009optimized present an improved version with efficient data storage, and many of the concepts in this article were borrowed from these articles. They saved the required patterns for different tessellation factors in a 3D array on the CPU in advance, and uploaded these data to the GPU memory to allow the vertex shader to directly perform transformations on vertices in different patterns to achieve the generation of more primitives.
 
 #figure(
   image("figures/refinepattern.png", width: 100%),
@@ -289,7 +289,7 @@ Since this method is based on vertex shaders, there is no way for vertex shaders
 
 Later, interpolation-based techniques were proposed such as Phong Tessellation @boubekeur2008phong and PN-Triangle @vlachos2001curved @schwarz2006gpu, which generate smoother subdivided surfaces by interpolating existing vertices and fitting curvature. These methods primarily aim to improve visual quality. Although they do not directly increase new topological structures, their visual effects closely resemble those of traditional geometric subdivision. 
 
-Meanwhile, GPGPU-based methods were also being developed to maximize the utilization of the GPU’s parallel computing power. Schwarz et al. @schwarz2009fast introduct an adaptive tessellation method based on CUDA[], other GPU based tessellation methods like @khoury2019adaptive @dupuy2020concurrent presented in recent years utilizing compute shader to generate massive amount of triangles in the GPU.
+Meanwhile, GPGPU-based methods were also being developed to maximize the utilization of the GPU’s parallel computing power. Schwarz et al. @schwarz2009fast introduct an adaptive tessellation method based on CUDA[], other GPU based tessellation methods like @khoury2019adaptive @dupuy2020concurrent were presented in recent years utilizing compute shader to generate massive amount of triangles in the GPU.
 
 // there are some interpolation-based refinement methods, such as Phong Tessellation and PN-Triangle Tessellation, which generate smoother subdivided surfaces by interpolating existing vertices and fitting curvature. These methods primarily aim to improve visual quality. Although they do not directly increase new topological structures, their visual effects closely resemble those of traditional geometric subdivision.
 
@@ -300,7 +300,7 @@ Meanwhile, GPGPU-based methods were also being developed to maximize the utiliza
 
 // 为了解决高精度模型带来的 CPU-GPU 间数据传输瓶颈，direct3d 11的带着全新的hardware tessellation技术以解决此问题，并奠定了全新的dynamic lod system的发展.
 
-To address the CPU-GPU data transfer bottleneck associated with high-precision modeling, Direct3D 11 @microsoft_d3d11 equipped with a new hardware segmentation technology and lays the groundwork for the development of a new dynamic LODs system.
+To address the CPU-GPU data transfer bottleneck associated with high-precision modeling, Direct3D 11 @microsoft_d3d11 equipped with a new hardware segmentation technology, laid the groundwork for the development of a new dynamic LOD system.
 
 #figure(
   image("figures/hwtesspipeline.png", width: 60%),
@@ -333,7 +333,7 @@ Hardware tessellation exposes programmability through programmable shaders such 
 
 // Although Hardware Tessellation significantly improves the real-time processing efficiency of high-quality geometric model details, it still has some unavoidable limitations. For example, since hardware tessellation operates on each patch individually, these patches do not actually share topological information. This inevitably leads to the generation of duplicate vertices along the shared edges of adjacent triangles. Additionally, the output of hardware tessellation is fed directly into later stages of the rendering pipeline without being written to GPU memory. The tessellation itself is performed by a non-programmable stage within the GPU pipeline, which makes it very difficult to manually intervene and eliminate the duplicate vertices.
 
-Hardware tessellation improves real-time detail processing but has a few limitations. It operates on patches independently without shared topology, which causing duplicate vertices are generated on shared edges. Additionally, tessellation output is directly sent to the pipeline without writing to GPU memory, and since tessellation is done in a non-programmable GPU stage, manual removal of duplicates is difficult.
+Hardware tessellation improves real-time detail processing but has a few limitations. It operates on patches independently without shared topology, which causes duplicate vertices to be generated on shared edges. Additionally, tessellation output is directly sent to the pipeline without writing to GPU memory, and since tessellation is done in a non-programmable GPU stage, manual removal of duplicates is difficult.
 
 // 此外，当前硬件细分器的实现也存在的效率瓶颈，由于hardware tessellation与传统渲染管线整合在一起的，它难免会受到遵循这样的阶段划分带来的影响。并且[一个post]patch内部，tessellator有可能对同一个顶点调用多次的tessellation, 虽然说最后结果是一眼的，但是这样仍然增加了许多计算冗余。
 
@@ -361,7 +361,7 @@ Unlike the previously mentioned refinement patterns, Micro Mesh @maggiordomo2023
 #figure(
   image("figures/micromeshcons.png", width: 100%),
   caption: [
-    Micro Mesh construction
+    Micro Mesh construction @maggiordomo2023micro
   ],
 )
 

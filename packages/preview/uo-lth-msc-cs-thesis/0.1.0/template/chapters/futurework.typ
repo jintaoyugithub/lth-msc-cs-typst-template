@@ -1,6 +1,6 @@
 = Limitation and Future work
 
-_This chapter discuss the challenges and issues we meet throught out the whore precess period. We also outlined several possible solution or related research for the furture work_
+_This chapter discuss the challenges and issues we meet through out the whore precess. We also outline several possible solutions and related research for  furture work._
 #v(15pt)
 
 == Data Optimization
@@ -26,6 +26,8 @@ GPUs have relatively limited memory resources available compared to host systems
 // 此外，在 Compute Shader 中利用 pattern 动态生成的顶点数据（如位置、法线、UV 等）也可以采用类似压缩方式进行高效存储与重构。由于 Shader 擅长大规模并行的简单计算，这类压缩与解压过程对性能的影响极小，却能显著降低显存占用，尤其适用于受限资源场景中的实时渲染任务。并且得益于 pattern 的高度对称性，我们甚至无需完整存储所有顶点数据，仅需保留一半顶点的属性信息，另一半则可以通过对称映射或简单计算直接还原，从而进一步压缩数据体积，减少存储压力。
 
 Although it was mentioned earlier that we only store u and v in the barycentric coordinates of each vertex, they are currently each still stored as 32-bit floats, which means that they take up 8 bytes per vertex. To further consolidate their memory footprint, we can encode v as 16-bit integers respectively, combining them into a single 32-bit, i.e. 4 bytes data structure, thus halving the memory overhead per vertex. Similarly, different bit-widths can be used for the storage of triangle indices @RTXMG.
+
+*todomorebackground*
 
 Besides the compression strategies mentioned above, the first paper, AMD proposes a lossy compression format for small meshlet patches by quantizing vertex coordinates and encoding topology compactly, achieving efficient and hardware-friendly geometry compression @barczak2024dgf. @evans1996optimizing focuses on triangle strips, optimizing rendering efficiency by reordering vertex sequences and constructing the longest possible strips to reduce redundant vertex transmission. @lenz2009optimized improve the pattern-based mesh refinement method @boubekeur2005generic, storing only essential refinement patterns and local information, significantly reducing the storage and transmission overhead of refined meshes while enabling efficient GPU parallel processing.
 
@@ -71,7 +73,7 @@ From the perspective of rendering efficiency, different regions often have diffe
 
 // 根据我有限的研究与调查，我发现不管是在最新的mega geometry中，还是稍微早一些的gpu tessellation[]，甚至是hardware tessellation，他们都不可避免的会在shared edge上生成重复的顶点，因为不论是稍微前沿一些的技术还是hardware tessellation他们都是以single triangle or quad作为tessellation的对象，并没有考虑整体的拓扑信息. 这就造成了原本连续的三角形突然间就变成了两个separated的三角形，with overlapping vertices on their shared edges, see Figure X. 
 
-Based on my limited research and investigation, I found that no matter in the latest mega geometry @RTXMG, or slightly earlier gpu tessellation @khoury2019adaptive @microsoftd3d11features @schwarz2009fast, or even hardware tessellation, they will inevitably generate duplicate vertices on the shared edge, because they are single triangle or quad as the object of tessellation, and do not consider the overall topological information. This results in a adjacent triangle suddenly becoming two separated triangles, with overlapping vertices on their shared edges, see Figure 41.
+Based on my limited research and investigation, I found that all techniques, including mega geometry @RTXMG, or slightly earlier gpu tessellation @khoury2019adaptive @microsoftd3d11features @schwarz2009fast, or even hardware tessellation, they all inevitably generate duplicate vertices on the shared edge, because they are single triangle or quad as the object of tessellation, and do not consider the overall topological information. This results in a adjacent triangle suddenly becoming two separated triangles, with overlapping vertices on their shared edges, see Figure 41.
 
 #figure(
   image("figures/ad2sep.svg", width: 90%),
@@ -83,6 +85,8 @@ Based on my limited research and investigation, I found that no matter in the la
 //![overlap vertices adjacent -> separated]
 
 // 而这也是导致我在重新计算normal的时候，会造成原本我们希望相邻三角形的face normal会作用在同一个顶点上，但是由于重复顶点的原因，现在face normal只会作用在当前构成该三角形的三个顶点上，see Figure X，使得最终的三角形内部的法线插值不够平滑，更坏的是，如果模型的curvature过大，那么两个相邻的三角形则会产生相聚较大的法线朝向，此时这两个三角形的shared edge就会开始争夺这条边的渲染权利，因为他们看似是一条边，但其实是不同的但是overlapped的顶点组成的,see Figure X
+
+*todo:rewrite this sen*
 
 That's why when I recalculate the normal, it will cause the face normals of adjacent triangles contribute to the same shared vertex to ensure smooth normal interpolation now only affects the three vertices explicitly forming the current triangle due to the presence of duplicated vertices, each face normal, see Figure 42.
 
@@ -103,7 +107,7 @@ If the curvature of the model is too large, then two neighboring triangles will 
 #figure(
   image("figures/fightnorm.svg", width: 90%),
   caption: [
-    Fighting normal
+    Fighting normal on the shared edge, todoexplain
   ],
 )
 
@@ -131,7 +135,7 @@ As shown in the Figure 44, A pattern with tessellation level 10 results in appro
   ],
 )
 
-However, the duplicate vertices removal strategy will be differ from different tessellation strategy. For example, if the tessellation is a wild range tessellation, say based on the whole cluster, the duplicate vertices to be removed will only exist at the edges of the cluster. As a result, providing a universal solution for duplicate vertex removal remains difficult.
+However, the duplicate vertices removal strategy will differ for different tessellation strategy. For example, if the tessellation is a wild range tessellation, say based on the whole cluster, the duplicate vertices to be removed will only exist at the edges of the cluster. As a result, providing a universal solution for duplicate vertex removal remains difficult.
 
 //![duplicate vertex的占比问题]
 
@@ -174,7 +178,7 @@ Although Compute Shader-based tessellation offers greater flexibility than the t
 
 // Therefore, Mesh Shader introduced by Nvidia[] allow us to avoid unnecessary overhead while maintaining the flexibility and high parallel computational capability. As shown in the Figure X, mesh shader和hardware tessellation一样，可以直接将输出的数据可以直接参与后续的渲染工作，并且由于task shader的存在，可以动态的dispatch mesh shader的数量，从而充分利用gpu高并行计算的能力
 
-Mesh Shader @nvidia_turing_mesh_shaders somehow allow us to avoid unnecessary overhead while maintaining the flexibility and high parallel computational capability. As shown in the Figure 47, mesh shader, similar to hardware tessellation, can directly pass the output data to the subsequent rendering work, and due to the existence of task shader, it can dynamically dispatch the number of mesh shaders, thus fully utilizing the gpu's highly parallel computing capability. dispatch the number of mesh shaders, thus fully utilizing the gpu's highly parallel computing capability.
+Mesh Shader @nvidia_turing_mesh_shaders somehow allow us to avoid unnecessary overhead while maintaining the flexibility and high parallel computational capability. As shown in the Figure 45, mesh shader, similar to hardware tessellation, can directly pass the output data to the subsequent rendering work, and due to the existence of task shader, it can dynamically dispatch the number of mesh shaders, thus fully utilizing the gpu's highly parallel computing capability. 
 
 #figure(
   image("figures/meshpipe.jpg", width: 100%),
@@ -203,7 +207,9 @@ However, the output of mesh shaders are limited by hardware constraints—typica
 == Visual effect
 
 // 还有提一下即便使用了4k的displacement texture，在Tessellation rate非常高的时候同样会出现由于精度不足出现的artifacts，see Figure 48
-Even when using a 4K resolution displacement texture, at very high tessellation rates each triangle can become smaller than a single pixel. In such cases, the limited bit depth used to store scalar values may not provide enough precision, leading to artifacts as shown in Figure 48.
+Even when using a 4K resolution displacement texture, at very high tessellation rates each triangle can become smaller than a single pixel. In such cases, the limited bit depth used to store scalar values may not provide enough precision, leading to artifacts as shown in Figure 46. Given the limitations of traditional displacement textures, both Henry Schäfer et al. [@schafer2013multiresolution] and Vinod Melapudi et al. [@melapudi2021time] propose new approaches that achieve more detailed displacement data by enabling finer control over the projection of vertices from a coarse mesh to a detailed mesh.
+
+// 鉴于传统displacement texure的一些限制，Both Henry Scha¨fer et al. @schafer2013multiresolution and Vinod Melapudi et al @melapudi2021time present new ways by 控制更加精细的coarse mesh到detailed mesh的顶点projection来获得更加精细的displace data
 
 #figure(
   image("figures/dmartifacts.png", width: 60%),
@@ -215,7 +221,7 @@ Even when using a 4K resolution displacement texture, at very high tessellation 
 
 // 由之前的结果可以看出, 由于我们只是增加了三角形的密度，并没有做像subdivision surface那样的平滑处理，所以从视觉效果上看，即使通过rasterizer为三角形内部的顶点信息做了插值平滑处理，但是模型的外轮廓还是显得很棱角分明的, see figure X
 
-As you can see from the previous results, since we only increased the density of the triangles and did not do any smoothing like the subdivision surface @sharp2000subdivision, visually, even though we interpolated and smoothed the vertex normal inside the triangles with the rasterizer, the silhouette of the model still looks sharp and angular, see Figure 49.
+As you can see from the previous results, since we only increased the density of the triangles and did not do any smoothing like the subdivision surface @sharp2000subdivision, visually, even though we interpolated and smoothed the vertex normal inside the triangles with the rasterizer, the silhouette of the model still looks sharp and angular, see Figure 47.
 
 #figure(
   kind:image,
@@ -242,28 +248,27 @@ Common approaches to improve this are generally divided into two categories: one
 // 另一种代表方法是PN Triangle，通过在平面三角形基础上构造高阶曲面，用较少的计算代价获得较为平滑的视觉效果。PN Triangle通过插值顶点位置和法线，构建二次Bezier曲面，从而显著改善平面三角形带来的棱角感，且相比完整Subdivision，计算更为轻量，适合实时渲染。除了PN Triangle，近年来基于着色器的曲面细分与拟合技术也逐渐兴起，比如利用Bezier Patch、Gregory Patch等高阶曲面模型
 
 
-
-@lee2000displaced Displaced subdivision surfaces
-
-@niessner2013rendering Rendering subdivision surfaces using hardware tessellation
-
-@melapudi2021time Time and Memory Efficient Displacement Map Extraction
-
-@brainerd2016efficient quad tree
-
-@niessner2013rendering subd hw tess
-
-@derose2023subdivision subd in animation
-
-@doo1978subdivision doo subd
-
-@kobbelt20003 3 subd
-
-@stam1998evaluation eval method
-
-@catmull1998recursively catmull subd
-
-@microsoft_thesis_10 loop
+// @lee2000displaced Displaced subdivision surfaces
+//
+// @niessner2013rendering Rendering subdivision surfaces using hardware tessellation
+//
+// @melapudi2021time Time and Memory Efficient Displacement Map Extraction
+//
+// @brainerd2016efficient quad tree
+//
+// @niessner2013rendering subd hw tess
+//
+// @derose2023subdivision subd in animation
+//
+// @doo1978subdivision doo subd
+//
+// @kobbelt20003 3 subd
+//
+// @stam1998evaluation eval method
+//
+// @catmull1998recursively catmull subd
+//
+// @microsoft_thesis_10 loop
 
 
 Subdivision Surface is actually the iterative application of Subdivision Schemes @catmull1998recursively @doo1978subdivision @microsoft_thesis_10 @kobbelt20003 on top of a coarse mesh to achieve surface smoothing by continuously generating and weighting vertex positions. These approaches are particularly computationally intensive in the case of adaptive subdivision. Especially for animated mesh @derose2023subdivision, the Subdivision Level of each frame may be different due to the change of geometric complexity over time, which not only requires the dynamic generation of a large number of vertices, but also needs to offset the positions of existing vertices according to the weighting rule to ensure the surface smoothness. In this regard, studies such as Brainerd et al. @brainerd2016efficient have proposed to pre-generate the Subdivision plan by using the adaptive quad tree structure, thus realizing efficient GPU rendering of Subdivision Surface in the GPU.
