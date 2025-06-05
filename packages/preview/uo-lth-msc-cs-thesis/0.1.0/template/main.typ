@@ -114,7 +114,7 @@ The proposed system is fully programmable, supports arbitrary topologies, and en
 // - directx
 
 #text(weight: 700, size: 20pt)[List of abbreviations]
-#v(50pt)
+#v(40pt)
 
 // #block[
 //   #text(weight: 700)[GLSL]\
@@ -127,6 +127,63 @@ The proposed system is fully programmable, supports arbitrary topologies, and en
 //   #text(weight: 700)[GPGPU]\
 //   #text(weight: 700)[OpenGL]
 // ]
+
+// #block[
+// #text(weight: 700)[GLSL] #h(35pt) OpenGL Shading Language \
+// #text(weight: 700)[CUDA] #h(32pt) Compute Unified Device Architecture \
+// #text(weight: 700)[LOD] #h(35pt) Level of Detail \
+// #text(weight: 700)[SSBO] #h(35pt) Shader Storage Buffer Object \
+// #text(weight: 700)[UBO] #h(35pt) Uniform Buffer Object \
+// #text(weight: 700)[GPGPU] #h(35pt) General-Purpose computing on Graphics Processing Units \
+// #text(weight: 700)[OpenCL] #h(35pt) Open Computing Language \
+// #text(weight: 700)[VR] #h(35pt) Virtual Reality \
+// #text(weight: 700)[AR] #h(35pt) Augmented Reality \
+// #text(weight: 700)[OpenGL] #h(35pt) Open Graphics Library \
+// #text(weight: 700)[CS] #h(35pt) Compute Shader \
+// ]
+
+#table(
+  columns: 2,
+  stroke: none,
+
+  [#text(weight: 700)[GLSL]], [OpenGL Shading Language],
+  [#text(weight: 700)[CUDA]], [Compute Unified Device Architecture],
+  [#text(weight: 700)[LOD]], [Level of Detail],
+  [#text(weight: 700)[SSBO]], [Shader Storage Buffer Object],
+  [#text(weight: 700)[UBO]], [Uniform Buffer Object],
+  [#text(weight: 700)[GPGPU]], [General-Purpose computing on Graphics Processing Units],
+  [#text(weight: 700)[OpenCL]], [Open Computing Language],
+  [#text(weight: 700)[VR]], [Virtual Reality],
+  [#text(weight: 700)[AR]], [Augmented Reality],
+  [#text(weight: 700)[OpenGL]], [Open Graphics Library],
+  [#text(weight: 700)[CS]], [Compute Shader],
+
+)//[
+  // #text(weight: 700)[CUDA]   Compute Unified Device Architecture
+  // #text(weight: 700)[LOD]    Level of Detail
+  // #text(weight: 700)[SSBO]   Shader Storage Buffer Object
+  // #text(weight: 700)[UBO]    Uniform Buffer Object
+  // #text(weight: 700)[GPGPU]  General-Purpose computing on Graphics Processing Units
+  // #text(weight: 700)[OpenCL] Open Computing Language
+  // #text(weight: 700)[VR]     Virtual Reality
+  // #text(weight: 700)[AR]     Augmented Reality
+  // #text(weight: 700)[OpenGL] Open Graphics Library
+  // #text(weight: 700)[CS]     Compute Shader
+//]
+
+
+// glsl
+// cuda
+// lod
+// ssbo
+// ubo
+// gpgpu
+// cuda
+// opencl
+// vr
+// ar
+// opengl
+// cs
 
 #include "chapters/introduction.typ"
 #include "chapters/relatework.typ"
