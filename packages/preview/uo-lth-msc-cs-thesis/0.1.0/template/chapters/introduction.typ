@@ -31,11 +31,11 @@ Based on the objectives and challenges outlined above, this thesis aims to addre
 
 #v(15pt)
 
-1. How can compute shaders be effectively utilized to implement an efficient and flexible real-time surface tessellation method?
+_1. How can compute shader be effectively utilized to implement an efficient and flexible real-time surface tessellation method?_
 
-2. What are the trade-offs between computational complexity and rendering performance when employing a compute shader-based tessellation solution compared to other solutions?
+_2. What are the trade-offs between computational complexity and rendering performance when employing a compute shader-based tessellation solution compared to other solutions?_
 
-3. Is it feasible to achieve high-fidelity geometry reconstruction in real-time rendering using software-based tessellation combined with displacement mapping? What are the technical challenges involved in this approach?
+_3. Is it feasible to achieve high-fidelity geometry reconstruction in real-time rendering using software-based tessellation combined with displacement mapping? What are the technical challenges involved in this approach?_
 
 // Based on the aim and challenges menthioned aboved, this thesis try to answer the following research questions:
 //
@@ -49,7 +49,7 @@ Based on the objectives and challenges outlined above, this thesis aims to addre
 
 == Contribution
 
-This thesis presents a real-time geometry reconstruction pipeline based on compute shader-driven tessellation, enabling dynamic surface refinement and displacement mapping directly on the GPU. It introduces a reusable, pattern-based tessellation method implemented entirely in compute shaders, capable of generating high-density geometry with arbitrary input topology. 
+This thesis presents a real-time geometry reconstruction pipeline based on compute shader-driven tessellation, enabling dynamic surface refinement and displacement mapping directly on the GPU. It introduces a reusable, pattern-based tessellation method implemented entirely in compute shader, capable of generating high-density geometry with arbitrary input topology. 
 
 The proposed pipeline is designed for practical use, with particular attention to memory efficiency and visual fidelity. Finally, the system is evaluated through detailed comparisons with traditional approaches such as hardware tessellation and Nanite, demonstrating its effectiveness in both performance and visual quality.
 

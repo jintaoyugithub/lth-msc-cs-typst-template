@@ -12,7 +12,7 @@ In computer graphics, tessellation describes the process of dividing existing pr
 #figure(
   image("figures/tessellation.png", width: 110%),
   caption: [
-    A human head model rendered under multiple tessellation levels. todoref
+    A human head model rendered under multiple tessellation levels. @zorin1999subdivision
   ],
 )
 
@@ -167,7 +167,7 @@ which:
 //
 // limit surface provide high order continuity, which make the surface more smooth, subdivsion algo [] will modified the topology of the coarse mesh, which cause 在实时动画领域，由于拓扑结构的不断改变，会造成顶点数据的计算量极具增大，并且对于tongyilevel的tessellation，subdivision往往需要更多的三角形来
 
-== Compute shader
+== Compute Shader
 
 To fulfill demand for arbitrary computational tasks, compute shader @khronoscomputeshader as a shader stage, was introduced to execute massively parallel, general-purpose computation on the GPU. Unlike languages designed for GPGPU programming such as CUDA @nvidia2025cuda, compute shaders naturally benefit from tight integration with graphics APIs, allowing them to directly utilize graphics-related functions
 
@@ -227,7 +227,7 @@ This allows for more precise detail by actually changing the shape of the object
 #figure(
   image("figures/dm.jpg", width: 80%),
   caption: [
-    Displacement mapping of a quad(top left) with a height map(bottom left) todoref
+    Displacement mapping of a quad(top left) with a height map(bottom left) @displacement_mapping_wiki
   ],
 )
 
@@ -260,6 +260,8 @@ Scalar Displacement and Vector Displacement are common in most use cases where t
 
 == Related work
 
+_Compute shader tessellation_ @khoury2019adaptive, _GPGPU tessellation_ @schwarz2009fast are the main focus of the initial research. Later, inspired by Mega Geometry @RTXMG and related techniques, the direction of the study was then shifted to its cluster based tessellation technique, the subsequent exploration focused on _gpu generic refinement schemes_ @boubekeur2005generic @boubekeur2008flexible, _mesh shader pipeline_ @nvidia_turing_mesh_shaders, and _micro-triangle_ @maggiordomo2023micro. In addition, to deepen our understanding of the geometry representation, key words _subdivision surface_  @sharp2000subdivision and _polygonal representations_ @pixar_opensubdiv are used. Finally to enrich the visual quality, we also studied techniques such as _subdivision surface approximation_ @doo1978subdivision @kobbelt20003 @loop1987smooth and _displacement mapping_ @niessner2013analytic @stuchlik2017extraction @melapudi2021time.
+
 //去抄real time rendering with hw tess的realted work
 
 === Prior Refinement Schemes
@@ -289,7 +291,7 @@ Since this method is based on vertex shaders, there is no way for vertex shaders
 
 Later, interpolation-based techniques were proposed such as Phong Tessellation @boubekeur2008phong and PN-Triangle @vlachos2001curved @schwarz2006gpu, which generate smoother subdivided surfaces by interpolating existing vertices and fitting curvature. These methods primarily aim to improve visual quality. Although they do not directly increase new topological structures, their visual effects closely resemble those of traditional geometric subdivision. 
 
-Meanwhile, GPGPU-based methods were also being developed to maximize the utilization of the GPU’s parallel computing power. Schwarz et al. @schwarz2009fast introduct an adaptive tessellation method based on CUDA[], other GPU based tessellation methods like @khoury2019adaptive @dupuy2020concurrent were presented in recent years utilizing compute shader to generate massive amount of triangles in the GPU.
+Meanwhile, GPGPU-based methods were also being developed to maximize the utilization of the GPU’s parallel computing power. Schwarz et al. @schwarz2009fast introduct an adaptive tessellation method based on CUDA, other GPU based tessellation methods like @khoury2019adaptive @dupuy2020concurrent were presented in recent years utilizing compute shader to generate massive amount of triangles in the GPU.
 
 // there are some interpolation-based refinement methods, such as Phong Tessellation and PN-Triangle Tessellation, which generate smoother subdivided surfaces by interpolating existing vertices and fitting curvature. These methods primarily aim to improve visual quality. Although they do not directly increase new topological structures, their visual effects closely resemble those of traditional geometric subdivision.
 

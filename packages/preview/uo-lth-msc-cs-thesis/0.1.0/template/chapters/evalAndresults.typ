@@ -95,14 +95,14 @@ Figure 31 compares the impact of culling operations on visibility at a fixed cam
 
 //![side camera view with culling, without culing]
 
-=== Displacement mapping
+=== Displacement Mapping
 
 // Tessellation和Displacement mapping一直在程序化地形中扮演者重要的角色，而我们的方法同样也是可以引用在常见的地形生成上的, see Figure X.
 Tessellation and displacement mapping have always played an important role in procedural terrain generation, and our method can also be applied to common terrain generation scenarios, see Figure 32.
 
 #figure(
   kind:image,
-  caption: [Terrain with 50 tessellation level(left) and with displacement mapping applied.
+  caption: [Terrain with 50 tessellation level(left) and with displacement mapping applied(right).],
   table(
     columns: 2,
     stroke:none,
@@ -117,7 +117,7 @@ To evaluate the generality of our method, we further apply displacement to compl
 
 #figure(
   kind:image,
-  caption: [Big guy with 10 tessellation level(left) and with displacement mapping applied.],
+  caption: [Big guy with 10 tessellation level(left) and with displacement mapping applied(right).],
   table(
     columns: 2,
     stroke:none,
@@ -240,14 +240,14 @@ As we mentioned in the previous chapter, the compute shader pipeline also incurs
 )
 
 
-It's worth noting that most of the memory here is pre-allocated in order to meet the needs of dynamically generated vertices. In the following analysis, we focus solely on the actual memory used by the generated geometry, excluding the pre-allocated buffer space reserved for dynamic vertex generation.
+It's worth noting that most of the memory here is pre-allocated in order to meet the needs of dynamically generated vertices, they might vary depending on the maximum number of triangles you ultimately wish to generate. In the following analysis, we focus solely on the actual memory used by the generated geometry, excluding the pre-allocated buffer space reserved for dynamic vertex generation.
 
-Following figure show the GPU time of each stage in millisecond with the tessellation factor of 50.
+Following figure show the GPU time of each stage in millisecond with the tessellation factor of 50, which will generate 7,250,000 triangles from the input coarse mesh with 2900 triangles.
 
 #figure(
-  image("figures/tesstime.png", width: 85%),
+  image("figures/cs50.svg", width: 90%),
   caption: [
-    GPU and CPU execution time of different stages todomaketable
+    GPU and CPU execution time of different stages
   ],
 )
 
@@ -331,7 +331,7 @@ While documenting the performance overhead of our own framework is necessary, in
 ]
 #v(15pt)
 
-In Table 2, we present comprehensive information about the input detailed mesh data. This section we present the subsequent analysis focusing on model loading time, rendering time and memory consumption, see Figure 39. To get the same triangle amount, input coarse mesh will apply pattern with tessellation level 32 to generate $2900 * 32 * 32 = 2969600$ triangles.
+In Table 2, we present comprehensive information about the input detailed mesh data. This section we present the subsequent analysis focusing on model loading time, rendering time and memory consumption, see Figure 39. To get the same triangle amount, input coarse mesh will apply pattern with tessellation level 32 to generate $2900 * 32 * 32 = 2,969,600$ triangles.
 
 // #figure(
 //   table(
@@ -351,7 +351,7 @@ In Table 2, we present comprehensive information about the input detailed mesh d
 
 
 #figure(
-  image("figures/tessvsori.png", width: 85%),
+  image("figures/tessvsori2.svg", width: 75%),
   caption: [
     Comparison between coarse mesh with compute shader tessellation and original detailed model
   ],
@@ -359,9 +359,7 @@ In Table 2, we present comprehensive information about the input detailed mesh d
 
 // 由于无法避免的必须将生成的顶点写会gpu内存，所以其实使用到的内存其实差不多，但是模型的加载时间从原来的27820ms减少到了86ms，渲染效率也相对提高了百分之37%，从7.3ms减少到了4.61ms
 
-Since the generated vertices must inevitably be written back to GPU memory, the actual memory usage remains roughly the same — or even slightly higher due to the additional storage required for the displacement texture. However, the model loading time is significantly reduced from 27,820 ms to 86 ms, and the rendering performance also improves by approximately 37%, with the rendering time decreasing from 7.3 ms to 4.61 ms.
-
-todo: why render fast?
+Since the generated vertices must inevitably be written back to GPU memory, the actual memory usage remains roughly the same — or even slightly higher due to the additional storage required for the displacement texture. However, the model loading time is significantly reduced from 27,820 ms to 88 ms, and the rendering performance also improves by approximately 45%, with the rendering time decreasing from 7.62 ms to 4.19 ms. Thanks to the early discard of invisible triangles, we actually render only about half the number of triangles compared to the original detailed mesh — while maintaining the same visual quality. Similarly, the memory consumption for the vertex and index buffers is also reduced by half, even taking displacement texture into account, the total memory usage amounts to only about 55% of the original model.
 
 #v(15pt)
 #block[
@@ -376,13 +374,27 @@ Since Hardware Tessellation directly stream generated primitive data to the GPU 
 
 
 #figure(
-  image("figures/tessvshwtess.png", width: 85%),
+  image("figures/csvshwtess.svg", width: 85%),
   caption: [
     Comparison between compute shader tessellation with hardware tessellation in different tessellation factors
   ],
 )
 
-Figure 40 compares the rendering performance of the two approaches using the same tessellation factors. As we can see, at moderate tessellation levels, the compute shader-based tessellation shows slightly better processing times. When the tessellation factor is either too high or too low, hardware tessellation performs slightly faster.
+Figure 40 compares the rendering performance of the two approaches using the same tessellation factors. As we can see, rendering based on hardware tessellation is slightly more efficient than the compute-shader-based pipeline. However, since we did not recalculate the normals in the tessellation evaluation shader, if that process is omitted, the compute shader tessellation actually performs better overall.
+
+//基于hardware tessellation的渲染其实要比compute shader based的渲染管线性能要好一些,但是由于我们并没有在tessellation evaluation shader中recalculate the normal, 如果去掉这个process, 整体性能其实是compute shader tessellation要好一些
+
+
+//#v(15pt)
+//#block[
+//  #text(size: 15pt, weight: 700,)[Compare to Nanite]
+//]
+//#v(15pt)
+//
+//Although the prototype presented in this project does not match Nanite in terms of system complexity, performance optimization, or visual quality, the comparison still offers valuable insights.
+//
+//todo
+
 
 // #v(15pt)
 // #block[

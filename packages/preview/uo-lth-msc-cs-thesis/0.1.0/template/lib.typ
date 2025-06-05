@@ -306,7 +306,7 @@
   place(center+horizon, 
     text(
       // datetime.today().display("[month repr:long] [day], [year]"),
-      datetime(year: 2025, month: 5, day: 27).display("[month repr:long] [day], [year]"),
+      datetime(year: 2025, month: 6, day: 3).display("[month repr:long] [day], [year]"),
       size: 18pt
     ),
     dy: -50pt

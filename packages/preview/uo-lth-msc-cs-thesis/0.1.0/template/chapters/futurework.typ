@@ -1,6 +1,6 @@
 = Limitation and Future work
 
-_This chapter discuss the challenges and issues we meet through out the whore precess. We also outline several possible solutions and related research for  furture work._
+_This chapter discuss the challenges and issues we meet through out the whole process. We also outline several possible solutions and related research for  furture work._
 #v(15pt)
 
 == Data Optimization
@@ -27,9 +27,7 @@ GPUs have relatively limited memory resources available compared to host systems
 
 Although it was mentioned earlier that we only store u and v in the barycentric coordinates of each vertex, they are currently each still stored as 32-bit floats, which means that they take up 8 bytes per vertex. To further consolidate their memory footprint, we can encode v as 16-bit integers respectively, combining them into a single 32-bit, i.e. 4 bytes data structure, thus halving the memory overhead per vertex. Similarly, different bit-widths can be used for the storage of triangle indices @RTXMG.
 
-*todomorebackground*
-
-Besides the compression strategies mentioned above, the first paper, AMD proposes a lossy compression format for small meshlet patches by quantizing vertex coordinates and encoding topology compactly, achieving efficient and hardware-friendly geometry compression @barczak2024dgf. @evans1996optimizing focuses on triangle strips, optimizing rendering efficiency by reordering vertex sequences and constructing the longest possible strips to reduce redundant vertex transmission. @lenz2009optimized improve the pattern-based mesh refinement method @boubekeur2005generic, storing only essential refinement patterns and local information, significantly reducing the storage and transmission overhead of refined meshes while enabling efficient GPU parallel processing.
+Besides the compression strategies mentioned above, AMD proposes a lossy compression format for small meshlet patches by quantizing vertex coordinates and encoding topology compactly, achieving efficient and hardware-friendly geometry compression @barczak2024dgf. @evans1996optimizing focuses on triangle strips, optimizing rendering efficiency by reordering vertex sequences and constructing the longest possible strips to reduce redundant vertex transmission. @lenz2009optimized improve the pattern-based mesh refinement method @boubekeur2005generic, storing only essential refinement patterns and local information, significantly reducing the storage and transmission overhead of refined meshes while enabling efficient GPU parallel processing.
 
 // The choice depends on the number of triangles generated in a single pattern: when the number of triangles is small, each index can be compressed to an 8-bit integer; for complex patterns, 16 bits can be chosen to maintain expressiveness. This compression strategy is based on Mega-Geometry's cluster based tessellation feature @RTXMG. In Compute Shader, the vertex attributes (position, normal, UV, etc.) generated dynamically by pattern can be restored in a similar compressed way. 
 
@@ -86,9 +84,9 @@ Based on my limited research and investigation, I found that all techniques, inc
 
 // 而这也是导致我在重新计算normal的时候，会造成原本我们希望相邻三角形的face normal会作用在同一个顶点上，但是由于重复顶点的原因，现在face normal只会作用在当前构成该三角形的三个顶点上，see Figure X，使得最终的三角形内部的法线插值不够平滑，更坏的是，如果模型的curvature过大，那么两个相邻的三角形则会产生相聚较大的法线朝向，此时这两个三角形的shared edge就会开始争夺这条边的渲染权利，因为他们看似是一条边，但其实是不同的但是overlapped的顶点组成的,see Figure X
 
-*todo:rewrite this sen*
+//That's why when I recalculate the normal, it will cause the face normals of adjacent triangles contribute to the same shared vertex to ensure smooth normal interpolation now only affects the three vertices explicitly forming the current triangle due to the presence of duplicated vertices, each face normal, see Figure 42.
 
-That's why when I recalculate the normal, it will cause the face normals of adjacent triangles contribute to the same shared vertex to ensure smooth normal interpolation now only affects the three vertices explicitly forming the current triangle due to the presence of duplicated vertices, each face normal, see Figure 42.
+That's why When recalculating normals, the face normals of adjacent triangles used to contribute to the same shared vertex to ensure smooth normal interpolation. However, due to the presence of duplicated vertices, each face normal now only affects the three vertices explicitly defining its own triangle, as shown in Figure 42.
 
 #figure(
   image("figures/leftaccu.svg", width: 90%),
@@ -107,7 +105,7 @@ If the curvature of the model is too large, then two neighboring triangles will 
 #figure(
   image("figures/fightnorm.svg", width: 90%),
   caption: [
-    Fighting normal on the shared edge, todoexplain
+    Fighting normal on the shared edge where vertices's normal are assigned by the blue triangle(left) in some frame or are assigned by the yellow triangle(right) in some frame
   ],
 )
 
@@ -129,7 +127,7 @@ As shown in the Figure 44, A pattern with tessellation level 10 results in appro
 //so it is hard to provide a generatic method to remove duplicate vertices.
 
 #figure(
-  image("figures/dupvertratio.png", width: 70%),
+  image("figures/dupvertratio.svg", width: 70%, height: 32%),
   caption: [
     Proportion of duplicate vertices in each tessellation pattern
   ],
@@ -204,10 +202,10 @@ In addition, the Mesh Shader Pipeline can effectively solve some of the performa
 
 However, the output of mesh shaders are limited by hardware constraints—typically up to 256 vertices and 128 primitives per workgroup @nvidia_turing_mesh_shaders. As a result, the size of reusable patterns is also constrained. To handle cases where a triangle’s tessellation level exceeds available patterns, we can iteratively split it until it fits within a supported pattern @RTXMG.
 
-== Visual effect
+== Visual Effect
 
 // 还有提一下即便使用了4k的displacement texture，在Tessellation rate非常高的时候同样会出现由于精度不足出现的artifacts，see Figure 48
-Even when using a 4K resolution displacement texture, at very high tessellation rates each triangle can become smaller than a single pixel. In such cases, the limited bit depth used to store scalar values may not provide enough precision, leading to artifacts as shown in Figure 46. Given the limitations of traditional displacement textures, both Henry Schäfer et al. [@schafer2013multiresolution] and Vinod Melapudi et al. [@melapudi2021time] propose new approaches that achieve more detailed displacement data by enabling finer control over the projection of vertices from a coarse mesh to a detailed mesh.
+Even when using a 4K resolution displacement texture, at very high tessellation rates each triangle can become smaller than a single pixel. In such cases, the limited bit depth used to store scalar values may not provide enough precision, leading to artifacts as shown in Figure 46. Given the limitations of traditional displacement textures, both Henry Schäfer et al. @schafer2013multiresolution and Vinod Melapudi et al. @melapudi2021time propose new approaches that achieve more detailed displacement data by enabling finer control over the projection of vertices from a coarse mesh to a detailed mesh.
 
 // 鉴于传统displacement texure的一些限制，Both Henry Scha¨fer et al. @schafer2013multiresolution and Vinod Melapudi et al @melapudi2021time present new ways by 控制更加精细的coarse mesh到detailed mesh的顶点projection来获得更加精细的displace data
 

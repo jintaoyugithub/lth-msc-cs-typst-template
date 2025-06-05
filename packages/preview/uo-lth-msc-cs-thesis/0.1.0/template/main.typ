@@ -2,6 +2,25 @@
 
 // Your acknowledgments (Ringraziamenti) go here
 #let acknowledgements = [
+
+#block[First and foremost, I would like to express my sincere gratitude to Electronic Arts and the Frostbite team for generously providing office space, essential hardware resources, and a supportive and welcoming work environment. Working alongside such talented and kind colleagues has enriched my experience and created many memorable moments throughout this thesis journey.]\
+
+#block[I am especially thankful to my supervisor, Kindahl Christian, and my manager, Andreas Buller, from the Frostbite team. Their continuous guidance, valuable advice, and constructive feedback were crucial in shaping my research direction and overcoming various challenges. Their support significantly contributed to the progress and quality of this work.]\
+
+#block[I would also like to extend my heartfelt appreciation to my supervisor at LTH, Michael Doggett. His steady insightful comments, and timely feedback helped me to clarify my ideas and improve the structure and content of this thesis.]\
+
+#block[Finally, I am deeply grateful to my family and friends, whose unwavering support, understanding, and encouragement helped me persevere through the most difficult and stressful periods of working on this thesis alone. Their belief in me was a constant source of motivation and strength, without which this accomplishment would not have been possible.]\
+
+//First and foremost, I would like to express my sincere gratitude to Electronic Arts and the Frostbite team for generously providing office space, essential hardware resources, and a supportive and welcoming work environment. Working alongside such talented and kind colleagues has enriched my experience and created many memorable moments throughout this thesis journey.
+
+//I am especially thankful to my supervisor, Kindahl Christian, and my manager, Andreas Buller, from the Frostbite team. Their continuous guidance, valuable advice, and constructive feedback were crucial in shaping my research direction and overcoming various challenges. Their support significantly contributed to the progress and quality of this work.
+
+//I would also like to extend my heartfelt appreciation to my supervisor at LTH, Michael Doggett. His steady encouragement, insightful comments, and timely feedback helped me to clarify my ideas and improve the structure and content of this thesis.
+
+//Finally, I am deeply grateful to my family and friends, whose unwavering support, understanding, and encouragement helped me persevere through the most difficult and stressful periods of working on this thesis alone. Their belief in me was a constant source of motivation and strength, without which this accomplishment would not have been possible.
+
+#v(15pt)
+#block[_Jintao Yu_]
 ]
 
 // Your abstract goes here

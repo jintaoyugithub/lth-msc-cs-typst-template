@@ -96,7 +96,7 @@ In Table 2, we present the mesh data we used in this project.
 )
 
 
-=== Data-preprossing
+=== Data Pre-processing
 
 In the offline phase, two key components are generated: the tessellation patterns set and a lookup table that indexes them in the GPU memory. Each pattern consists of a set of vertices and triangle indices, which are stored in two large, contiguous memory blocks. The size of each block is determined by the total number of vertices and indices across all supported tessellation levels (from level 0 to the maximum), as shown in left side of Figure 17. For example, the first three vertices in the memory block belong to the first pattern, the next six to the second pattern, and so on. The same layout applies to the index buffer.
 
@@ -110,7 +110,7 @@ In the offline phase, two key components are generated: the tessellation pattern
 
 The lookup table stores the entry points for each pattern, making it efficient to access the appropriate pattern directly in GPU memory during execution. Additional information such as the indices of edge vertices on the coarse triangle is also stored to facilitate vertex reuse when applying patterns.
 
-=== Real time framework
+=== Real Time Framework
 
 During the runtime phase, the system runs a sequence of compute-shader-based stages: resource cleanup, triangle visibility determination, tessellation level computation, pattern-based tessellation, and normal recalculation, see Figure 18. Since compute shaders operate within an isolated pipeline and cannot directly render to the screen, we must transfer the generated vertex and index data to the traditional rendering pipeline using SSBO, which are then bound to the vertex and fragment shaders.
 
@@ -293,7 +293,7 @@ Using the above method, we can efficiently pre-generate triangle uniform pattern
 
 //== table construction
 
-== Visibility and tess rate determination
+== Visibility and Tessellation Level Determination
 
 // 除了资源的重置，这两个可以算是real time pipeline的正式开端。我们必须在管线的开始就去除掉看不见的三角形是因为很明显这些三角形参加后续的计算是没有意义的，我们并不想把宝贵的计算和内存资源浪费在根本看不见的三角形上面
 //
@@ -377,9 +377,9 @@ To further enhance geometric detail, displacement mapping can be applied on top 
 
 //![部分coarse mesh(with pattern) + displacement texture]
 
-=== Vertices Deduplication
+//=== Vertices Deduplication
 
-TODO
+//TODO
 
 // 因为tessellation是针对每个coarse triangle的，并没有考略整体的拓扑信息，导致在细分的时候，triangles which share the same edges will 在相同的位置生成duplicate vertices, see figure X
 //
@@ -411,12 +411,12 @@ However, when dealing with complex 3D models, the situation is different. If we 
   ],
 )
 
-If only face normal is used, each triangle will appear distinctly flat and the overall effect will be stiff. Therefore, it is more desirable to compute normals for each vertex, so that during the rasterization phase, the GPU can interpolate the normals inside the triangles, resulting in a smoother surface effect. Specifically, for each tessellated triangle, we first construct its face normals and accumulate them to each of the three vertices constituting the triangle. Taking the topology in Figure 26 as an example, if a vertex X is connected to multiple triangles, then that vertex will receive the face normals from each neighboring triangle. In this way, the final normal of vertex X is jointly determined by the normals of all its neighboring triangles, providing better smoothing.
+If only face normal is used, each triangle will appear distinctly flat and the overall effect will be stiff. Therefore, it is more desirable to compute normals for each vertex, so that during the rasterization phase, the GPU can interpolate the normals inside the triangles, resulting in a smoother surface effect. Specifically, for each tessellated triangle, we first construct its face normals and accumulate them to each of the three vertices constituting the triangle. Taking the topology in Figure 26 as an example, the normal at the red vertex is the average of the face normals of all triangles connected to the red vertex, the final normal of the red vertex is jointly determined by the face normal of accumulated by all its neighboring triangles.
 
 #figure(
   image("figures/accuproc.svg", width: 100%),
   caption: [
-    todoclear
+    Normal recalculation at the red vertex based on connected triangles' face normal (left), and the process of accumulating face normals (middle and right).
   ],
 )
 
